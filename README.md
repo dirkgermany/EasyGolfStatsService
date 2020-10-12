@@ -15,4 +15,4 @@ To use the egsService this prerequisites mus be fullfilled:
 
 ## Usage
 The egsService stores the training data in a database.
-If needed it can provide the data as files. 
+If needed it can provide the data as files - regulary CSV formatted. 
