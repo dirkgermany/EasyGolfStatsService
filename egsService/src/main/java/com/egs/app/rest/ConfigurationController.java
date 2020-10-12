@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.egs.app.ConfigurationStore;
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.ClubStore;
+import com.egs.app.model.entity.HitsEntity;
 import com.egs.app.rest.message.ConfigResponse;
 import com.egs.app.rest.message.DropResponse;
 import com.egs.app.rest.message.ListConfigurationResponse;
@@ -27,15 +27,15 @@ import com.egs.exception.CsServiceException;
 @RestController
 public class ConfigurationController extends MasterController {
 	@Autowired
-	private ConfigurationStore configurationStore;
+	private ClubStore clubStore;
 	
 	@GetMapping("/listConfigurations")
 	public ResponseEntity<RestResponse> listUsers(@RequestHeader Map<String, String> headers) throws CsServiceException {
 
 		try {
-			List<ConfigEntity> configEntities = configurationStore.listAllConfigurationsSafe(headers);
-			if (null != configEntities) {
-				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(configEntities), HttpStatus.OK);
+			List<HitsEntity> hitsEntities = clubStore.listAllConfigurationsSafe(headers);
+			if (null != hitsEntities) {
+				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(hitsEntities), HttpStatus.OK);
 			}
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
@@ -62,10 +62,10 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			List<ConfigEntity> configEntities = configurationStore.listConfigurationsSafe(decodedParams, headers);
+			List<HitsEntity> hitsEntities = clubStore.listConfigurationsSafe(decodedParams, headers);
 			
 			
-				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(configEntities), HttpStatus.OK);
+				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(hitsEntities), HttpStatus.OK);
 			
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
@@ -94,9 +94,9 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			ConfigEntity configEntity = configurationStore.createConfigurationSafe(requestBody, decodedParams, headers);
-			if (null != configEntity) {
-				return new ResponseEntity<RestResponse>(new ConfigResponse(configEntity), HttpStatus.OK);
+			HitsEntity hitsEntity = clubStore.createConfigurationSafe(requestBody, decodedParams, headers);
+			if (null != hitsEntity) {
+				return new ResponseEntity<RestResponse>(new ConfigResponse(hitsEntity), HttpStatus.OK);
 			}
 		} catch (CsServiceException e) {
 			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.valueOf(e.getErrorId().intValue()),
@@ -119,9 +119,9 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			ConfigEntity configEntity = configurationStore.updateConfigurationSafe(requestBody, decodedParams, headers);
-			if (null != configEntity) {
-				return new ResponseEntity<RestResponse>(new ConfigResponse(configEntity), HttpStatus.OK);
+			HitsEntity hitsEntity = clubStore.updateConfigurationSafe(requestBody, decodedParams, headers);
+			if (null != hitsEntity) {
+				return new ResponseEntity<RestResponse>(new ConfigResponse(hitsEntity), HttpStatus.OK);
 			}
 		} catch (CsServiceException e) {
 			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.valueOf(e.getErrorId().intValue()),
@@ -150,7 +150,7 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			configurationStore.dropConfigurationSafe(decodedParams, headers);
+			clubStore.dropConfigurationSafe(decodedParams, headers);
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
 					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Configuration not deleted", dse.getMessage()),

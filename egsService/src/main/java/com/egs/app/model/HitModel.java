@@ -9,29 +9,29 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.Param;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.HitsEntity;
 
 @Transactional
-public interface ConfigurationModel extends Repository<ConfigEntity, Long>, CrudRepository<ConfigEntity, Long> {
+public interface HitModel extends Repository<HitsEntity, Long>, CrudRepository<HitsEntity, Long> {
 
 //	Configuration findByConfKey(String confKey);
 
 	// KEY
 	@Query("SELECT config FROM ConfigEntity config where config.confKey = :confKey ")
-	List<ConfigEntity> findList(@Param("confKey") String confKey);
+	List<HitsEntity> findList(@Param("confKey") String confKey);
 		
 	// USER KEY
 	@Query("SELECT config FROM ConfigEntity config where config.userId = :userId AND config.confKey = :confKey ")
-	List<ConfigEntity> findList(@Param("userId") Long userId, @Param("confKey") String confKey);
+	List<HitsEntity> findList(@Param("userId") Long userId, @Param("confKey") String confKey);
 	
 	// KEY INDEX
 	@Query("SELECT config FROM ConfigEntity config where config.confKey = :confKey AND config.listIndex = :listIndex")
-	ConfigEntity find(@Param("confKey") String confKey, @Param("listIndex") Integer listIndex);
+	HitsEntity find(@Param("confKey") String confKey, @Param("listIndex") Integer listIndex);
 	
 	// USER KEY INDEX
 	@Query("SELECT config FROM ConfigEntity config where config.userId = :userId "
 			+ "AND config.confKey = :confKey AND config.listIndex = :listIndex")
-	ConfigEntity find(@Param("userId") Long userId, @Param("confKey") String confKey, @Param("listIndex") Integer listIndex);
+	HitsEntity find(@Param("userId") Long userId, @Param("confKey") String confKey, @Param("listIndex") Integer listIndex);
 		
 //	@Modifying
 //	@Transactional

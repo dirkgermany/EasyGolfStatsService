@@ -2,23 +2,23 @@ package com.egs.app.rest.message;
 
 import org.springframework.http.HttpStatus;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.HitsEntity;
 
 public class ConfigResponse extends RestResponse{
-    private ConfigEntity configEntity;
+    private HitsEntity hitsEntity;
     	
-	public ConfigResponse (ConfigEntity configEntity) {
+	public ConfigResponse (HitsEntity hitsEntity) {
 		super(HttpStatus.OK, "OK", "Configuration found");
 		
-		setConfigEntity(configEntity);
+		setConfigEntity(hitsEntity);
 	}  
 
-	private void setConfigEntity(ConfigEntity configEntity) {
-		this.configEntity = configEntity;
+	private void setConfigEntity(HitsEntity hitsEntity) {
+		this.hitsEntity = hitsEntity;
 	}
 	
-	public ConfigEntity getConfigEntity() {
-		return this.configEntity;
+	public HitsEntity getConfigEntity() {
+		return this.hitsEntity;
 	}
 	
 }

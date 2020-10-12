@@ -1,23 +1,23 @@
 package com.egs.app.rest.message;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.HitsEntity;
 
 public class UpdateRequest extends RestRequest {
 
-	private ConfigEntity configStored = new ConfigEntity();
-	private ConfigEntity configContainer = new ConfigEntity();
+	private HitsEntity configStored = new HitsEntity();
+	private HitsEntity configContainer = new HitsEntity();
 
-    public UpdateRequest(ConfigEntity userStored, ConfigEntity userUpdate) {
+    public UpdateRequest(HitsEntity userStored, HitsEntity userUpdate) {
 		super("CS 0.0.1");
 		this.configStored = userStored;
 		this.configContainer = userUpdate;
     }
     
-    public ConfigEntity getConfigStored() {
+    public HitsEntity getConfigStored() {
     	return configStored;
     }
     
-    public ConfigEntity getConfigContainer() {
+    public HitsEntity getConfigContainer() {
     	return configContainer;
     }
     

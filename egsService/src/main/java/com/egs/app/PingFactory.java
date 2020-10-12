@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class PingFactory {
 	
 	@Autowired
-	ConfigurationStore configurationStore;
+	ClubStore clubStore;
 
 	@Autowired
 	Properties properties;
@@ -45,7 +45,7 @@ public class PingFactory {
 		pingInfo.put("uptime", upTime.toString() + "ms");
 
 		// Database
-		String records = String.valueOf(configurationStore.count());
+		String records = String.valueOf(clubStore.count());
 		pingInfo.put("database", "available: " + records + " records");
 
 		// Server

@@ -2,23 +2,23 @@ package com.egs.app.rest.message;
 
 import org.springframework.http.HttpStatus;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.HitsEntity;
 
 public class WriteResponse extends RestResponse{
-    private ConfigEntity configEntity;
+    private HitsEntity hitsEntity;
     	
-	public WriteResponse (ConfigEntity configEntity) {
+	public WriteResponse (HitsEntity hitsEntity) {
 		super(HttpStatus.CREATED, "OK", "Configuration created");
 		
-		setUser(configEntity);
+		setUser(hitsEntity);
 	}  
 
-	private void setUser(ConfigEntity configEntity) {
-		this.configEntity = configEntity;
+	private void setUser(HitsEntity hitsEntity) {
+		this.hitsEntity = hitsEntity;
 	}
 	
-	public ConfigEntity getUser() {
-		return configEntity;
+	public HitsEntity getUser() {
+		return hitsEntity;
 	}
 	
 }

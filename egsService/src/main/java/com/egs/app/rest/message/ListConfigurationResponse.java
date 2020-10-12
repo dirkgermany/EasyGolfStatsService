@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.HitsEntity;
 
 public class ListConfigurationResponse extends RestResponse{
 	
@@ -16,36 +16,36 @@ public class ListConfigurationResponse extends RestResponse{
 		this.isList = isList;
 	}
 
-	private List<ConfigEntity> configEntities;
-    private ConfigEntity configEntity;
+	private List<HitsEntity> hitsEntities;
+    private HitsEntity hitsEntity;
     private Boolean isList;
     	
-	public ListConfigurationResponse (List<ConfigEntity> configEntities) {
+	public ListConfigurationResponse (List<HitsEntity> hitsEntities) {
 		super(HttpStatus.OK, "OK", "Configurations found");
 		
-		if (configEntities.size() == 1) {
+		if (hitsEntities.size() == 1) {
 			setIsList(false);
-			setConfiguration(configEntities.get(0));
+			setConfiguration(hitsEntities.get(0));
 		} else {
 			setIsList(true);
-			setConfigurations(configEntities);
+			setConfigurations(hitsEntities);
 		}
 	}  
 
-    public List<ConfigEntity> getConfigurations() {
-		return configEntities;
+    public List<HitsEntity> getConfigurations() {
+		return hitsEntities;
 	}
 
-	public void setConfigurations(List<ConfigEntity> configEntities) {
-		this.configEntities = configEntities;
+	public void setConfigurations(List<HitsEntity> hitsEntities) {
+		this.hitsEntities = hitsEntities;
 	}
 
-	public ConfigEntity getConfiguration() {
-		return configEntity;
+	public HitsEntity getConfiguration() {
+		return hitsEntity;
 	}
 
-	public void setConfiguration(ConfigEntity configEntity) {
-		this.configEntity = configEntity;
+	public void setConfiguration(HitsEntity hitsEntity) {
+		this.hitsEntity = hitsEntity;
 	}
 
 

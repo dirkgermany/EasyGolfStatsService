@@ -1,23 +1,24 @@
 package com.egs.app.rest.message;
 
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.entity.ClubEntity;
+import com.egs.app.types.ClubType;
 
 public class WriteRequest extends RestRequest {
 
-	private ConfigEntity configEntity;	
+	private ClubEntity clubEntity;	
 
-    public WriteRequest(ConfigEntity configEntity) {
+    public WriteRequest(ClubEntity clubEntity) {
 		super("CS 0.0.1");
-		this.configEntity = configEntity;
+		this.clubEntity = clubEntity;
     }
     
-    public WriteRequest(Long userId, String confKey, String value, Integer listIndex, Boolean hidden) {
+    public WriteRequest(Long userId, ClubType clubType, String clubName) {
 		super("CS 0.0.1");
-		configEntity = new ConfigEntity(userId, confKey, value, listIndex, hidden);
+		clubEntity = new ClubEntity(userId, clubType, clubName);
     }
     
-    public ConfigEntity getConfigEntity() {
-    	return configEntity;
+    public ClubEntity getClubEntity() {
+    	return clubEntity;
     }
     
 }

@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
 
-import com.egs.app.model.ConfigurationModel;
-import com.egs.app.model.entity.ConfigEntity;
+import com.egs.app.model.ClubModel;
+import com.egs.app.model.entity.HitsEntity;
 import com.egs.app.rest.message.WriteRequest;
 import com.egs.exception.CsServiceException;
 
@@ -23,16 +23,16 @@ import com.egs.exception.CsServiceException;
  */
 @Controller
 @ComponentScan
-public class ConfigurationStore {
+public class HitStore {
 
 	@Autowired
-	private ConfigurationModel configurationModel;
+	private ClubModel clubModel;
 
 	public long count() {
-		return configurationModel.count();
+		return clubModel.count();
 	}
 
-	public List<ConfigEntity> listConfigurationsSafe(Map<String, String> requestParams, Map<String, String> headers)
+	public List<HitsEntity> listConfigurationsSafe(Map<String, String> requestParams, Map<String, String> headers)
 			throws CsServiceException {
 		String requestorUserIdAsString = requestParams.get("requestorUserId");
 		if (null == requestorUserIdAsString) {
@@ -62,15 +62,15 @@ public class ConfigurationStore {
 			index = extractInteger(indexAsString);
 		}
 
-		List<ConfigEntity> configEntitys = getConfigurations(requestorUserId, userId, key, index);
+		List<HitsEntity> configEntitys = getConfigurations(requestorUserId, userId, key, index);
 		if (null == configEntitys) {
 			throw new CsServiceException(404L, "Configuration not found", "No match for userId, key, index");
 		}
 
-		List<ConfigEntity> returnList = new ArrayList<>();
-		Iterator<ConfigEntity> it = configEntitys.iterator();
+		List<HitsEntity> returnList = new ArrayList<>();
+		Iterator<HitsEntity> it = configEntitys.iterator();
 		while (it.hasNext()) {
-			ConfigEntity conf = it.next();
+			HitsEntity conf = it.next();
 			try {
 				PermissionCheck.isReadPermissionSet(requestorUserId, conf.getUserId(), rights);
 				returnList.add(conf);
@@ -83,7 +83,7 @@ public class ConfigurationStore {
 		return returnList;
 	}
 
-	public List<ConfigEntity> listAllConfigurationsSafe(Map<String, String> headers) throws CsServiceException {
+	public List<HitsEntity> listAllConfigurationsSafe(Map<String, String> headers) throws CsServiceException {
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 
@@ -91,21 +91,21 @@ public class ConfigurationStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 		PermissionCheck.isReadPermissionSet(requestorUserId, null, rights);
 
-		ArrayList<ConfigEntity> configEntitys = new ArrayList<>();
-		configurationModel.findAll().forEach(conf -> {
+		ArrayList<HitsEntity> configEntitys = new ArrayList<>();
+		clubModel.findAll().forEach(conf -> {
 			configEntitys.add(conf);
 		});
 
 		return configEntitys;
 	}
 
-	public ConfigEntity createConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public HitsEntity createConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 		PermissionCheck.checkRequestedParams(requestBody, requestorUserIdAsString, rights);
-		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), ConfigEntity.class, "");
+		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), HitsEntity.class, "");
 
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 		PermissionCheck.isWritePermissionSet(requestorUserId, requestBody.getConfigEntity().getUserId(), rights);
@@ -114,7 +114,7 @@ public class ConfigurationStore {
 		String autoIndexAsString = requestParams.get("autoIndex");
 		Boolean autoIndex = extractBoolean(autoIndexAsString);
 		if (autoIndex) {
-			List<ConfigEntity> configList = getConfigurations(null, requestBody.getConfigEntity().getUserId(),
+			List<HitsEntity> configList = getConfigurations(null, requestBody.getConfigEntity().getUserId(),
 					requestBody.getConfigEntity().getConfKey(), null);
 			if (null != configList) {
 				requestBody.getConfigEntity().setListIndex(configList.size());
@@ -126,22 +126,22 @@ public class ConfigurationStore {
 		return createConfiguration(requestBody.getConfigEntity());
 	}
 
-	public ConfigEntity updateConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public HitsEntity updateConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 		PermissionCheck.checkRequestedParams(requestBody, requestorUserIdAsString, rights);
-		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), ConfigEntity.class, "");
+		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), HitsEntity.class, "");
 
-		ConfigEntity configurationUpdateData = requestBody.getConfigEntity();
+		HitsEntity configurationUpdateData = requestBody.getConfigEntity();
 		if (null == configurationUpdateData.getUserId() && null == configurationUpdateData.getConfKey()) {
 			throw new CsServiceException(401L, "Cannot update configuration", "UserId and key are empty");
 		}
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 		PermissionCheck.isWritePermissionSet(requestorUserId, configurationUpdateData.getUserId(), rights);
 
-		List<ConfigEntity> configList = getConfigurations(requestorUserId, configurationUpdateData.getUserId(),
+		List<HitsEntity> configList = getConfigurations(requestorUserId, configurationUpdateData.getUserId(),
 				configurationUpdateData.getConfKey(), configurationUpdateData.getListIndex());
 		if (null == configList) {
 			throw new CsServiceException(404L, "Cannot update configuration", "No matching entity found");
@@ -149,35 +149,35 @@ public class ConfigurationStore {
 			throw new CsServiceException(404L, "Cannot update configuration",
 					"Result not unique, found more than one entity");
 		}
-		ConfigEntity entityToDrop = configList.get(0);
+		HitsEntity entityToDrop = configList.get(0);
 		entityToDrop.updateFrom(configurationUpdateData);
 
 		return updateConfiguration(entityToDrop);
 	}
 
-	private List<ConfigEntity> getConfigurations(Long requestorUserId, Long userId, String key, Integer index) throws CsServiceException {
-		List<ConfigEntity> configList = new ArrayList<>();
-		ConfigEntity config = null;
+	private List<HitsEntity> getConfigurations(Long requestorUserId, Long userId, String key, Integer index) throws CsServiceException {
+		List<HitsEntity> configList = new ArrayList<>();
+		HitsEntity config = null;
 
 		// USER KEY INDEX
 		if (null != userId && null != index) {
-			config = configurationModel.find(userId, key, index);
+			config = clubModel.find(userId, key, index);
 			if (null != config && checkPrivate(requestorUserId, config)) {
 				configList.add(config);
 			}
 		}
 		// KEY INDEX
 		else if (null != index) {
-			config = configurationModel.find(key, index);
+			config = clubModel.find(key, index);
 			if (null != config && checkPrivate(requestorUserId, config)) {
 				configList.add(config);
 			}
 		}
 		// USER KEY
 		else if (null != userId) {
-			Iterator<ConfigEntity> it =  configurationModel.findList(userId, key).iterator();
+			Iterator<HitsEntity> it =  clubModel.findList(userId, key).iterator();
 			while (it.hasNext()) {
-				ConfigEntity nextEntity = it.next();
+				HitsEntity nextEntity = it.next();
 				if (null != nextEntity && checkPrivate(requestorUserId, nextEntity)) {
 					configList.add(nextEntity);
 				}
@@ -185,9 +185,9 @@ public class ConfigurationStore {
 		}
 		// KEY
 		else {
-			Iterator<ConfigEntity> it = configurationModel.findList(key).iterator();
+			Iterator<HitsEntity> it = clubModel.findList(key).iterator();
 			while (it.hasNext()) {
-				ConfigEntity nextEntity = it.next();
+				HitsEntity nextEntity = it.next();
 				if (null != nextEntity && checkPrivate(requestorUserId, nextEntity)) {
 					configList.add(nextEntity);
 				}
@@ -201,7 +201,7 @@ public class ConfigurationStore {
 		return configList;
 	}
 	
-	private boolean checkPrivate(Long requestorUserId, ConfigEntity config) {
+	private boolean checkPrivate(Long requestorUserId, HitsEntity config) {
 		if (null == requestorUserId && null == config) {
 			return true;
 		}
@@ -221,7 +221,7 @@ public class ConfigurationStore {
 	 * @param lastName
 	 * @return
 	 */
-	private ConfigEntity createConfiguration(ConfigEntity configContainer) throws CsServiceException {
+	private HitsEntity createConfiguration(HitsEntity configContainer) throws CsServiceException {
 
 		if (null == configContainer.getUserId() || null == configContainer.getConfKey()
 				|| null == configContainer.getValue()) {
@@ -237,21 +237,21 @@ public class ConfigurationStore {
 		}
 
 		try {
-			ConfigEntity configEntity = configurationModel.save(configContainer);
-			return configEntity;
+			HitsEntity hitsEntity = clubModel.save(configContainer);
+			return hitsEntity;
 		} catch (Exception ex) {
 			return null;
 		}
 	}
 
-	private ConfigEntity updateConfiguration(ConfigEntity confUpdateData) throws CsServiceException {
+	private HitsEntity updateConfiguration(HitsEntity confUpdateData) throws CsServiceException {
 
-		ConfigEntity storedConfiguration = getConfiguration(confUpdateData.get_id());
+		HitsEntity storedConfiguration = getConfiguration(confUpdateData.get_id());
 		if (null == storedConfiguration) {
 			throw new CsServiceException(401L, "Cannot update configuration", "Configuration not found by parameters");
 		}
 		storedConfiguration.updateFrom(confUpdateData);
-		storedConfiguration = configurationModel.save(storedConfiguration);
+		storedConfiguration = clubModel.save(storedConfiguration);
 		if (null == storedConfiguration) {
 			throw new CsServiceException(401L, "Configuration not updated",
 					"Unknown reason but configuration was not saved");
@@ -272,27 +272,27 @@ public class ConfigurationStore {
 		}
 		Long configurationId = extractLong(configurationIdAsString);
 
-		ConfigEntity configEntity = getConfiguration(configurationId);
-		if (null == configEntity) {
+		HitsEntity hitsEntity = getConfiguration(configurationId);
+		if (null == hitsEntity) {
 			throw new CsServiceException(404L, "Configuration not found", "No match for userId, key, index");
 		}
 
-		PermissionCheck.isDeletePermissionSet(requestorUserId, configEntity.getUserId(), rights);
-		dropConfiguration(configEntity.get_id());
+		PermissionCheck.isDeletePermissionSet(requestorUserId, hitsEntity.getUserId(), rights);
+		dropConfiguration(hitsEntity.get_id());
 	}
 
-	public ConfigEntity getConfiguration(Long _id) {
-		Optional<ConfigEntity> optionalConfiguration = configurationModel.findById(_id);
+	public HitsEntity getConfiguration(Long _id) {
+		Optional<HitsEntity> optionalConfiguration = clubModel.findById(_id);
 		if (null != optionalConfiguration && optionalConfiguration.isPresent()) {
-			ConfigEntity configEntity = optionalConfiguration.get();
-			return configEntity;
+			HitsEntity hitsEntity = optionalConfiguration.get();
+			return hitsEntity;
 		}
 		return null;
 	}
 
 	private void dropConfiguration(Long _id) throws CsServiceException {
-		configurationModel.deleteById(_id);
-		ConfigEntity deletedConfiguration = getConfiguration(_id);
+		clubModel.deleteById(_id);
+		HitsEntity deletedConfiguration = getConfiguration(_id);
 		if (null != deletedConfiguration) {
 			throw new CsServiceException(404L, "Configuration not deleted",
 					"Unknown reason but configuration was not deleted");
