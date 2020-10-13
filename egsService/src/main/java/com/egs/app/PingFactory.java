@@ -16,6 +16,9 @@ public class PingFactory {
 	
 	@Autowired
 	ClubStore clubStore;
+	
+	@Autowired
+	HitStore hitsStore;
 
 	@Autowired
 	Properties properties;
@@ -45,8 +48,11 @@ public class PingFactory {
 		pingInfo.put("uptime", upTime.toString() + "ms");
 
 		// Database
-		String records = String.valueOf(clubStore.count());
-		pingInfo.put("database", "available: " + records + " records");
+		String recordsClubs = String.valueOf(clubStore.count());
+		pingInfo.put("database table clubs", "available club entries: " + recordsClubs + " entries");
+		
+		String recordsHits = String.valueOf(hitsStore.count());
+		pingInfo.put("database table hits", "available hits entries: " + recordsHits + " entries");
 
 		// Server
 		try {

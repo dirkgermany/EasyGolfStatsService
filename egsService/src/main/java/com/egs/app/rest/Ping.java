@@ -23,7 +23,7 @@ public class Ping {
 	 */
 	@GetMapping("/ping")
 	public JsonNode ping() {
-		pingFactory.init("UserRepository");			
+		pingFactory.init("EasyGolfStats");			
 		return pingFactory.getNode();
 	}
 	

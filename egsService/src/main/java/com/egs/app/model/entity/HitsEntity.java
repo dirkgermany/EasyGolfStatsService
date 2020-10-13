@@ -4,6 +4,8 @@ import java.time.LocalDate;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -36,9 +38,11 @@ public class HitsEntity {
 	private LocalDate sessionDate;
 	
 	@Column(nullable = false) 
+	@Enumerated(EnumType.STRING)
 	private HitCategory hitCategory;
 	
 	@Column(nullable = false)
+	@Enumerated(EnumType.STRING)
 	private ClubType clubType;
 	
 	@Column(nullable = false)
