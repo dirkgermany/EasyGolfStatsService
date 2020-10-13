@@ -4,7 +4,7 @@ import org.springframework.http.HttpStatus;
 
 public class RestResponse {
 
-	private final String SERVICE_NAME = "ConfigurationService";
+	private final String SERVICE_NAME = "EgsService";
 
 	private HttpStatus httpStatus;
 	private String description;

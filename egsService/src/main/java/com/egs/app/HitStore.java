@@ -1,5 +1,6 @@
 package com.egs.app;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -10,9 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Controller;
 
-import com.egs.app.model.ClubModel;
+import com.egs.app.PermissionCheck;
+import com.egs.app.model.HitModel;
 import com.egs.app.model.entity.HitsEntity;
-import com.egs.app.rest.message.WriteRequest;
+import com.egs.app.rest.message.HitsWriteRequest;
+import com.egs.app.types.ClubType;
+import com.egs.app.types.HitCategory;
 import com.egs.exception.CsServiceException;
 
 /**
@@ -26,13 +30,62 @@ import com.egs.exception.CsServiceException;
 public class HitStore {
 
 	@Autowired
-	private ClubModel clubModel;
+	private HitModel hitModel;
 
 	public long count() {
-		return clubModel.count();
+		return hitModel.count();
+	}
+	
+	public HitsEntity getHitsSafe(Map<String, String> requestParams, Map<String, String> headers) throws CsServiceException {
+						
+		String requestorUserIdAsString = requestParams.get("requestorUserId");
+		if (null == requestorUserIdAsString) {
+			requestorUserIdAsString = headers.get("requestoruserid");
+		}
+		String rights = requestParams.get("rights");
+		if (null == rights) {
+			rights = headers.get("rights");
+		}
+
+		PermissionCheck.checkRequestedParams(requestorUserIdAsString, rights);
+		Long requestorUserId = extractLong(requestorUserIdAsString);
+
+		String userIdAsString = requestParams.get("userId");
+		String sessionDateAsString = requestParams.get("sessionDate");
+		String hitCategoryAsString = requestParams.get("hitCategory");
+		String clubTypeAsString = requestParams.get("clubType");
+		
+		if (null == userIdAsString || userIdAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
+		}
+		
+		if (null == sessionDateAsString || sessionDateAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
+		}
+
+		if (null == hitCategoryAsString || hitCategoryAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "hitCategory is null or empty");
+		}
+
+		if (null == clubTypeAsString || clubTypeAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "clubType is null or empty");
+		}
+
+		Long userId = extractLong(userIdAsString);
+		LocalDate sessionDate = LocalDate.parse(sessionDateAsString);
+		HitCategory hitCategory = HitCategory.valueOf(hitCategoryAsString);
+		ClubType clubType = ClubType.valueOf(clubTypeAsString);
+
+		HitsEntity hitsEntity = getHitsByData(userId, sessionDate, hitCategory, clubType);
+		if (null == hitsEntity) {
+			throw new CsServiceException(404L, "Hits not found", "Unknown userId, sessionDate, hitCategory and clubType");
+		}
+		PermissionCheck.isReadPermissionSet(requestorUserId, hitsEntity.getUserId(), rights);
+		return hitsEntity;
+				
 	}
 
-	public List<HitsEntity> listConfigurationsSafe(Map<String, String> requestParams, Map<String, String> headers)
+	public List<HitsEntity> listSessionHitsSafe(Map<String, String> requestParams, Map<String, String> headers)
 			throws CsServiceException {
 		String requestorUserIdAsString = requestParams.get("requestorUserId");
 		if (null == requestorUserIdAsString) {
@@ -47,33 +100,31 @@ public class HitStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
 		String userIdAsString = requestParams.get("userId");
-		String key = requestParams.get("key");
-		String indexAsString = requestParams.get("index");
-
-		if (null == key) {
-			throw new CsServiceException(404L, "Cannot search configuration", "Search key is empty");
+		String sessionDateAsString = requestParams.get("sessionDate");
+		
+		if (null == userIdAsString || userIdAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
 		}
-		Long userId = null;
-		if (null != userIdAsString) {
-			userId = extractLong(userIdAsString);
-		}
-		Integer index = null;
-		if (null != indexAsString) {
-			index = extractInteger(indexAsString);
+		
+		if (null == sessionDateAsString || sessionDateAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
 		}
 
-		List<HitsEntity> configEntitys = getConfigurations(requestorUserId, userId, key, index);
-		if (null == configEntitys) {
-			throw new CsServiceException(404L, "Configuration not found", "No match for userId, key, index");
-		}
+		LocalDate sessionDate = LocalDate.parse(sessionDateAsString);
+		Long userId = extractLong(userIdAsString);
 
+		List<HitsEntity> hitsEntitys = getSessionHitsList(userId, sessionDate);
+		if (null == hitsEntitys) {
+			throw new CsServiceException(404L, "Hits not found", "No match for userId, sessionDate");
+		}
+		
 		List<HitsEntity> returnList = new ArrayList<>();
-		Iterator<HitsEntity> it = configEntitys.iterator();
+		Iterator<HitsEntity> it = hitsEntitys.iterator();
 		while (it.hasNext()) {
-			HitsEntity conf = it.next();
+			HitsEntity hits = it.next();
 			try {
-				PermissionCheck.isReadPermissionSet(requestorUserId, conf.getUserId(), rights);
-				returnList.add(conf);
+				PermissionCheck.isReadPermissionSet(requestorUserId, hits.getUserId(), rights);
+				returnList.add(hits);
 			} catch (CsServiceException cse) {
 				// User may not read this configuration value
 				// try next entry
@@ -83,7 +134,7 @@ public class HitStore {
 		return returnList;
 	}
 
-	public List<HitsEntity> listAllConfigurationsSafe(Map<String, String> headers) throws CsServiceException {
+	public List<HitsEntity> listAllHitsSafe(Map<String, String> headers) throws CsServiceException {
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 
@@ -91,172 +142,101 @@ public class HitStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 		PermissionCheck.isReadPermissionSet(requestorUserId, null, rights);
 
-		ArrayList<HitsEntity> configEntitys = new ArrayList<>();
-		clubModel.findAll().forEach(conf -> {
-			configEntitys.add(conf);
+		ArrayList<HitsEntity> hitsEntitys = new ArrayList<>();
+		hitModel.findAll().forEach(hits -> {
+			hitsEntitys.add(hits);
 		});
 
-		return configEntitys;
+		return hitsEntitys;
 	}
 
-	public HitsEntity createConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public HitsEntity createHitsSafe(HitsWriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 		PermissionCheck.checkRequestedParams(requestBody, requestorUserIdAsString, rights);
-		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), HitsEntity.class, "");
+		PermissionCheck.checkRequestedEntity(requestBody.getHitsEntity(), HitsEntity.class, "");
 
 		Long requestorUserId = extractLong(requestorUserIdAsString);
-		PermissionCheck.isWritePermissionSet(requestorUserId, requestBody.getConfigEntity().getUserId(), rights);
+		PermissionCheck.isWritePermissionSet(requestorUserId, requestBody.getHitsEntity().getUserId(), rights);
 
-		// if autoIndex than ignore listIndex of entity in request
-		String autoIndexAsString = requestParams.get("autoIndex");
-		Boolean autoIndex = extractBoolean(autoIndexAsString);
-		if (autoIndex) {
-			List<HitsEntity> configList = getConfigurations(null, requestBody.getConfigEntity().getUserId(),
-					requestBody.getConfigEntity().getConfKey(), null);
-			if (null != configList) {
-				requestBody.getConfigEntity().setListIndex(configList.size());
-			} else {
-				requestBody.getConfigEntity().setListIndex(0);
-			}
-		}
-
-		return createConfiguration(requestBody.getConfigEntity());
+		return createHits(requestBody.getHitsEntity());
 	}
 
-	public HitsEntity updateConfigurationSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public HitsEntity updateHitsSafe(HitsWriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 		PermissionCheck.checkRequestedParams(requestBody, requestorUserIdAsString, rights);
-		PermissionCheck.checkRequestedEntity(requestBody.getConfigEntity(), HitsEntity.class, "");
+		PermissionCheck.checkRequestedEntity(requestBody.getHitsEntity(), HitsEntity.class, "");
 
-		HitsEntity configurationUpdateData = requestBody.getConfigEntity();
-		if (null == configurationUpdateData.getUserId() && null == configurationUpdateData.getConfKey()) {
-			throw new CsServiceException(401L, "Cannot update configuration", "UserId and key are empty");
+		HitsEntity hitsUpdateData = requestBody.getHitsEntity();
+		if (null == hitsUpdateData.getUserId() || null == hitsUpdateData.get_id()) {
+			throw new CsServiceException(401L, "Cannot update hits entry", "userId is empty");
 		}
 		Long requestorUserId = extractLong(requestorUserIdAsString);
-		PermissionCheck.isWritePermissionSet(requestorUserId, configurationUpdateData.getUserId(), rights);
+		PermissionCheck.isWritePermissionSet(requestorUserId, hitsUpdateData.getUserId(), rights);
 
-		List<HitsEntity> configList = getConfigurations(requestorUserId, configurationUpdateData.getUserId(),
-				configurationUpdateData.getConfKey(), configurationUpdateData.getListIndex());
-		if (null == configList) {
-			throw new CsServiceException(404L, "Cannot update configuration", "No matching entity found");
-		} else if (configList.size() > 1) {
-			throw new CsServiceException(404L, "Cannot update configuration",
-					"Result not unique, found more than one entity");
+		HitsEntity hitsToUpdate = getHits(hitsUpdateData.get_id());
+		if (null == hitsToUpdate) {
+			throw new CsServiceException(404L, "Cannot update hits entry", "No matching entity found");
 		}
-		HitsEntity entityToDrop = configList.get(0);
-		entityToDrop.updateFrom(configurationUpdateData);
 
-		return updateConfiguration(entityToDrop);
+		hitsToUpdate.updateFrom(hitsUpdateData);
+		return updateHits(hitsToUpdate);
 	}
 
-	private List<HitsEntity> getConfigurations(Long requestorUserId, Long userId, String key, Integer index) throws CsServiceException {
-		List<HitsEntity> configList = new ArrayList<>();
-		HitsEntity config = null;
+	private List<HitsEntity> getSessionHitsList(Long userId, LocalDate sessionDate) throws CsServiceException {
+		ArrayList<HitsEntity> hitsEntitys = new ArrayList<>();
+		hitModel.findList(userId, sessionDate).forEach(hits -> {
+			hitsEntitys.add(hits);
+		});	
 
-		// USER KEY INDEX
-		if (null != userId && null != index) {
-			config = clubModel.find(userId, key, index);
-			if (null != config && checkPrivate(requestorUserId, config)) {
-				configList.add(config);
-			}
-		}
-		// KEY INDEX
-		else if (null != index) {
-			config = clubModel.find(key, index);
-			if (null != config && checkPrivate(requestorUserId, config)) {
-				configList.add(config);
-			}
-		}
-		// USER KEY
-		else if (null != userId) {
-			Iterator<HitsEntity> it =  clubModel.findList(userId, key).iterator();
-			while (it.hasNext()) {
-				HitsEntity nextEntity = it.next();
-				if (null != nextEntity && checkPrivate(requestorUserId, nextEntity)) {
-					configList.add(nextEntity);
-				}
-			}
-		}
-		// KEY
-		else {
-			Iterator<HitsEntity> it = clubModel.findList(key).iterator();
-			while (it.hasNext()) {
-				HitsEntity nextEntity = it.next();
-				if (null != nextEntity && checkPrivate(requestorUserId, nextEntity)) {
-					configList.add(nextEntity);
-				}
-			}
-		}
 
-		if (configList.size() < 1) {
+		if (hitsEntitys.size() < 1) {
 			return null;
 		}
 
-		return configList;
-	}
-	
-	private boolean checkPrivate(Long requestorUserId, HitsEntity config) {
-		if (null == requestorUserId && null == config) {
-			return true;
-		}
-		
-		if (config.getHidden() && !config.getUserId().equals(requestorUserId)) {
-			return false;
-		}
-		return true;
+		return hitsEntitys;
 	}
 
-	/**
-	 * Creates a user. Checks if the userName still exists (must be distinct)
-	 * 
-	 * @param userName
-	 * @param password
-	 * @param givenName
-	 * @param lastName
-	 * @return
-	 */
-	private HitsEntity createConfiguration(HitsEntity configContainer) throws CsServiceException {
+	private HitsEntity createHits(HitsEntity hitsContainer) throws CsServiceException {
 
-		if (null == configContainer.getUserId() || null == configContainer.getConfKey()
-				|| null == configContainer.getValue()) {
+		if (null == hitsContainer.getUserId() || null == hitsContainer.getSessionDate() || null == hitsContainer.getHitCategory()
+				|| null == hitsContainer.getClubType()) {
 			return null;
 		}
 
 		// does the Configuration already exists?
 		//
-		if (null != getConfigurations(null, configContainer.getUserId(), configContainer.getConfKey(),
-				configContainer.getListIndex())) {
-			throw new CsServiceException(409L, "Configuration not created",
-					"Configuration already exists, try update method");
+		if (null != getHitsByData(hitsContainer.getUserId(), hitsContainer.getSessionDate(), hitsContainer.getHitCategory(), hitsContainer.getClubType())) {
+			throw new CsServiceException(409L, "Hits entry not created",
+					"entry already exists, try update method");
 		}
 
 		try {
-			HitsEntity hitsEntity = clubModel.save(configContainer);
+			HitsEntity hitsEntity = hitModel.save(hitsContainer);
 			return hitsEntity;
 		} catch (Exception ex) {
 			return null;
 		}
 	}
 
-	private HitsEntity updateConfiguration(HitsEntity confUpdateData) throws CsServiceException {
+	private HitsEntity updateHits(HitsEntity hitsUpdateData) throws CsServiceException {
 
-		HitsEntity storedConfiguration = getConfiguration(confUpdateData.get_id());
-		if (null == storedConfiguration) {
-			throw new CsServiceException(401L, "Cannot update configuration", "Configuration not found by parameters");
+		HitsEntity storedHits = getHits(hitsUpdateData.get_id());
+		if (null == storedHits) {
+			throw new CsServiceException(401L, "Cannot update hits", "Hits not found by id");
 		}
-		storedConfiguration.updateFrom(confUpdateData);
-		storedConfiguration = clubModel.save(storedConfiguration);
-		if (null == storedConfiguration) {
-			throw new CsServiceException(401L, "Configuration not updated",
-					"Unknown reason but configuration was not saved");
+		storedHits.updateFrom(hitsUpdateData);
+		storedHits = hitModel.save(storedHits);
+		if (null == storedHits) {
+			throw new CsServiceException(401L, "Hits not updated",
+					"Unknown reason but hits entry was not saved");
 		}
-		return storedConfiguration;
+		return storedHits;
 	}
 
 	public void dropConfigurationSafe(Map<String, String> requestParams, Map<String, String> headers)
@@ -268,21 +248,25 @@ public class HitStore {
 
 		String configurationIdAsString = requestParams.get("configurationId");
 		if (null == configurationIdAsString) {
-			throw new CsServiceException(404L, "Cannot drop configuration", "Configuration id is empty");
+			throw new CsServiceException(404L, "Cannot drop hits", "Hits id is empty");
 		}
 		Long configurationId = extractLong(configurationIdAsString);
 
-		HitsEntity hitsEntity = getConfiguration(configurationId);
+		HitsEntity hitsEntity = getHits(configurationId);
 		if (null == hitsEntity) {
-			throw new CsServiceException(404L, "Configuration not found", "No match for userId, key, index");
+			throw new CsServiceException(404L, "Hits not found", "No match for _id");
 		}
 
 		PermissionCheck.isDeletePermissionSet(requestorUserId, hitsEntity.getUserId(), rights);
-		dropConfiguration(hitsEntity.get_id());
+		dropHits(hitsEntity.get_id());
+	}
+	
+	private HitsEntity getHitsByData(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType) {
+		return hitModel.find(userId, sessionDate, hitCategory, clubType);
 	}
 
-	public HitsEntity getConfiguration(Long _id) {
-		Optional<HitsEntity> optionalConfiguration = clubModel.findById(_id);
+	public HitsEntity getHits(Long _id) {
+		Optional<HitsEntity> optionalConfiguration = hitModel.findById(_id);
 		if (null != optionalConfiguration && optionalConfiguration.isPresent()) {
 			HitsEntity hitsEntity = optionalConfiguration.get();
 			return hitsEntity;
@@ -290,12 +274,12 @@ public class HitStore {
 		return null;
 	}
 
-	private void dropConfiguration(Long _id) throws CsServiceException {
-		clubModel.deleteById(_id);
-		HitsEntity deletedConfiguration = getConfiguration(_id);
+	private void dropHits(Long _id) throws CsServiceException {
+		hitModel.deleteById(_id);
+		HitsEntity deletedConfiguration = getHits(_id);
 		if (null != deletedConfiguration) {
-			throw new CsServiceException(404L, "Configuration not deleted",
-					"Unknown reason but configuration was not deleted");
+			throw new CsServiceException(404L, "Hits not deleted",
+					"Unknown reason but hits entry was not deleted");
 		}
 	}
 
@@ -305,24 +289,6 @@ public class HitStore {
 		} catch (Exception e) {
 			throw new CsServiceException(500L, "Extraction Long from String failed",
 					"Parameter is required but null or does not represent a Long value");
-		}
-	}
-
-	private Integer extractInteger(String integerString) throws CsServiceException {
-		try {
-			return Integer.valueOf(integerString);
-		} catch (Exception e) {
-			throw new CsServiceException(500L, "Extraction Integer from String failed",
-					"Parameter is required but null or does not represent a Long value");
-		}
-	}
-
-	private Boolean extractBoolean(String booleanString) throws CsServiceException {
-		try {
-			return Boolean.valueOf(booleanString);
-		} catch (Exception e) {
-			throw new CsServiceException(500L, "Extraction Boolean from String failed",
-					"Parameter is required but null or does not represent a Boolean value");
 		}
 	}
 }

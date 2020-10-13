@@ -19,9 +19,9 @@ import com.egs.app.types.HitCategory;
 @Entity
 @Component
 @Table(name = "Hits", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "userId", "confKey", "listIndex" }) }, indexes = {
-				@Index(name = "idx_config_primary", columnList = "userId, confKey, listIndex"),
-				@Index(name = "idx_config_secondary", columnList = "confKey, listIndex") })
+		@UniqueConstraint(columnNames = { "userId", "sessionDate", "hitCategory", "clubType" }) }, indexes = {
+				@Index(name = "idx_hits_primary", columnList = "userId, sessionDate, hitCategory, clubType"),
+				@Index(name = "idx_hits_secondary", columnList = "userId, sessionDate") })
 
 public class HitsEntity {
 	

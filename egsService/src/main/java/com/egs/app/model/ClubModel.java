@@ -24,4 +24,9 @@ public interface ClubModel extends Repository<ClubEntity, Long>, CrudRepository<
 			+ "AND club.clubType = :clubType")
 	ClubEntity find(@Param("userId") Long userId, @Param("clubType") ClubType clubType);
 
+	// USER CLUBNAME
+	@Query("SELECT club FROM ClubEntity club where club.userId = :userId "
+			+ "AND club.clubName = :clubName")
+	ClubEntity find(@Param("userId") Long userId, @Param("clubName") String clubName);
+
 }

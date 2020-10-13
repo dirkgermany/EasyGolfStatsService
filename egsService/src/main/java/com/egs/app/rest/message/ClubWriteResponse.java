@@ -4,10 +4,10 @@ import org.springframework.http.HttpStatus;
 
 import com.egs.app.model.entity.HitsEntity;
 
-public class WriteResponse extends RestResponse{
+public class ClubWriteResponse extends RestResponse{
     private HitsEntity hitsEntity;
     	
-	public WriteResponse (HitsEntity hitsEntity) {
+	public ClubWriteResponse (HitsEntity hitsEntity) {
 		super(HttpStatus.CREATED, "OK", "Configuration created");
 		
 		setUser(hitsEntity);

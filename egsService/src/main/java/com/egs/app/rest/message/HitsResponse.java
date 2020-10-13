@@ -4,11 +4,11 @@ import org.springframework.http.HttpStatus;
 
 import com.egs.app.model.entity.HitsEntity;
 
-public class ConfigResponse extends RestResponse{
+public class HitsResponse extends RestResponse{
     private HitsEntity hitsEntity;
     	
-	public ConfigResponse (HitsEntity hitsEntity) {
-		super(HttpStatus.OK, "OK", "Configuration found");
+	public HitsResponse (HitsEntity hitsEntity) {
+		super(HttpStatus.OK, "OK", "Hits found");
 		
 		setConfigEntity(hitsEntity);
 	}  

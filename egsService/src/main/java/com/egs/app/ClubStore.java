@@ -1,5 +1,6 @@
 package com.egs.app;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Controller;
 
 import com.egs.app.model.ClubModel;
 import com.egs.app.model.entity.ClubEntity;
-import com.egs.app.rest.message.WriteRequest;
+import com.egs.app.rest.message.ClubWriteRequest;
 import com.egs.app.types.ClubType;
 import com.egs.exception.CsServiceException;
 
@@ -31,6 +32,53 @@ public class ClubStore {
 		return clubModel.count();
 	}
 
+	public ClubEntity getClubSafe(Map<String, String> requestParams, Map<String, String> headers) throws CsServiceException {
+		
+		String requestorUserIdAsString = requestParams.get("requestorUserId");
+		if (null == requestorUserIdAsString) {
+			requestorUserIdAsString = headers.get("requestoruserid");
+		}
+		String rights = requestParams.get("rights");
+		if (null == rights) {
+			rights = headers.get("rights");
+		}
+
+		PermissionCheck.checkRequestedParams(requestorUserIdAsString, rights);
+		Long requestorUserId = extractLong(requestorUserIdAsString);
+
+		String userIdAsString = requestParams.get("userId");
+		String clubName = requestParams.get("clubName");
+		String clubTypeAsString = requestParams.get("clubType");
+		
+		if (null == userIdAsString || userIdAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search club", "userId is null or empty");
+		}
+		
+		ClubType clubType = null;
+		if (null != clubTypeAsString && !clubTypeAsString.isEmpty()) {
+			clubType = ClubType.valueOf(clubTypeAsString);
+		}
+		
+		if ((null == clubName || clubName.isEmpty()) && null == clubType) {
+			throw new CsServiceException(404L, "Cannot search club", "clubName and clubType are null or empty");
+		}
+
+		Long userId = extractLong(userIdAsString);
+		ClubEntity clubEntity = null;
+		if (null != clubType) {
+			clubEntity = getClub(userId, clubType);
+		} else {
+			clubEntity = getClub(userId, clubName);
+		}
+
+		if (null == clubEntity) {
+			throw new CsServiceException(404L, "Club not found", "Unknown userId and (clubType or clubName)");
+		}
+		PermissionCheck.isReadPermissionSet(requestorUserId, clubEntity.getUserId(), rights);
+		return clubEntity;
+				
+	}
+
 	public List<ClubEntity> listClubsSafe(Map<String, String> requestParams, Map<String, String> headers)
 			throws CsServiceException {
 		String requestorUserIdAsString = requestParams.get("requestorUserId");
@@ -46,21 +94,34 @@ public class ClubStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
 		String userIdAsString = requestParams.get("userId");
-
-		Long userId = null;
-		if (null != userIdAsString) {
-			userId = extractLong(userIdAsString);
+		if (null == userIdAsString || userIdAsString.isEmpty()) {
+			throw new CsServiceException(404L, "Cannot search clubs for user", "userId is null or empty");
 		}
 
-		List<ClubEntity> clubEntitys = getClubs(requestorUserId, userId);
+		Long userId = extractLong(userIdAsString);
+
+		List<ClubEntity> clubEntitys = getClubs(userId);
 		if (null == clubEntitys) {
 			throw new CsServiceException(404L, "Clubs for user not found", "No match for userId");
 		}
+		
+		List<ClubEntity> returnList = new ArrayList<>();
+		Iterator<ClubEntity> it = clubEntitys.iterator();
+		while (it.hasNext()) {
+			ClubEntity club = it.next();
+			try {
+				PermissionCheck.isReadPermissionSet(requestorUserId, club.getUserId(), rights);
+				returnList.add(club);
+			} catch (CsServiceException cse) {
+				// User may not read this configuration value
+				// try next entry
+			}
+		}
 
-		return clubEntitys;
+		return returnList;
 	}
 
-	public List<ClubEntity> listAllConfigurationsSafe(Map<String, String> headers) throws CsServiceException {
+	public List<ClubEntity> listAllClubsSafe(Map<String, String> headers) throws CsServiceException {
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 
@@ -76,7 +137,7 @@ public class ClubStore {
 		return clubEntitys;
 	}
 
-	public ClubEntity createClubSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public ClubEntity createClubSafe(ClubWriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
@@ -90,7 +151,7 @@ public class ClubStore {
 		return createClub(requestBody.getClubEntity());
 	}
 
-	public ClubEntity updateClubSafe(WriteRequest requestBody, Map<String, String> requestParams,
+	public ClubEntity updateClubSafe(ClubWriteRequest requestBody, Map<String, String> requestParams,
 			Map<String, String> headers) throws CsServiceException {
 
 		String requestorUserIdAsString = headers.get("requestoruserid");
@@ -113,12 +174,11 @@ public class ClubStore {
 		return updateClub(entityToUpdate);
 	}
 
-	private List<ClubEntity> getClubs(Long requestorUserId, Long userId) throws CsServiceException {
+	private List<ClubEntity> getClubs(Long userId) throws CsServiceException {
 		if (null == userId) {
 			throw new CsServiceException(401L, "Cannot list clubs", "userId is empty");
 		}
 
-		// USER
 		List<ClubEntity> clubList = clubModel.findList(userId);
 			if (null == clubList) {
 				throw new CsServiceException(401L, "Club list is empty", "no club found for user");
@@ -127,15 +187,6 @@ public class ClubStore {
 		return clubList;
 	}
 	
-	/**
-	 * Creates a user. Checks if the userName still exists (must be distinct)
-	 * 
-	 * @param userName
-	 * @param password
-	 * @param givenName
-	 * @param lastName
-	 * @return
-	 */
 	private ClubEntity createClub(ClubEntity clubContainer) throws CsServiceException {
 
 		if (null == clubContainer.getUserId() || null == clubContainer.getClubType()) {
@@ -202,8 +253,12 @@ public class ClubStore {
 		return null;
 	}
 	
-	public ClubEntity getClub(Long userId, ClubType clubType) {
+	private ClubEntity getClub(Long userId, ClubType clubType) {
 		return clubModel.find(userId, clubType);
+	}
+	
+	private ClubEntity getClub(Long userId, String clubName) {
+		return clubModel.find(userId,  clubName);
 	}
 
 	private void dropClub(Long _id) throws CsServiceException {

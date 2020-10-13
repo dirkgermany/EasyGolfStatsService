@@ -6,7 +6,7 @@ import org.springframework.http.HttpStatus;
 
 import com.egs.app.model.entity.HitsEntity;
 
-public class ListConfigurationResponse extends RestResponse{
+public class ListHitsResponse extends RestResponse{
 	
 	public Boolean getIsList() {
 		return isList;
@@ -20,7 +20,7 @@ public class ListConfigurationResponse extends RestResponse{
     private HitsEntity hitsEntity;
     private Boolean isList;
     	
-	public ListConfigurationResponse (List<HitsEntity> hitsEntities) {
+	public ListHitsResponse (List<HitsEntity> hitsEntities) {
 		super(HttpStatus.OK, "OK", "Configurations found");
 		
 		if (hitsEntities.size() == 1) {

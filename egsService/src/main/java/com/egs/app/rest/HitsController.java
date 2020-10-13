@@ -15,42 +15,42 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.egs.app.ClubStore;
+import com.egs.app.HitStore;
 import com.egs.app.model.entity.HitsEntity;
-import com.egs.app.rest.message.ConfigResponse;
+import com.egs.app.rest.message.HitsResponse;
+import com.egs.app.rest.message.HitsWriteRequest;
 import com.egs.app.rest.message.DropResponse;
-import com.egs.app.rest.message.ListConfigurationResponse;
+import com.egs.app.rest.message.ListHitsResponse;
 import com.egs.app.rest.message.RestResponse;
-import com.egs.app.rest.message.WriteRequest;
 import com.egs.exception.CsServiceException;
 
 @RestController
-public class ConfigurationController extends MasterController {
+public class HitsController extends MasterController {
 	@Autowired
-	private ClubStore clubStore;
+	private HitStore hitStore;
 	
-	@GetMapping("/listConfigurations")
-	public ResponseEntity<RestResponse> listUsers(@RequestHeader Map<String, String> headers) throws CsServiceException {
+	@GetMapping("/listSessionHits")
+	public ResponseEntity<RestResponse> listSessionHits(@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) throws CsServiceException {
 
 		try {
-			List<HitsEntity> hitsEntities = clubStore.listAllConfigurationsSafe(headers);
+			List<HitsEntity> hitsEntities = hitStore.listSessionHitsSafe(params, headers);
 			if (null != hitsEntities) {
-				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(hitsEntities), HttpStatus.OK);
+				return new ResponseEntity<RestResponse>(new ListHitsResponse(hitsEntities), HttpStatus.OK);
 			}
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
-					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Configuration list could not be read", dse.getMessage()),
+					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Hits list could not be read", dse.getMessage()),
 					HttpStatus.OK);
 		}
 		return new ResponseEntity<RestResponse>(
-				new RestResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Configuration list could not be read", "No configuration found"),
+				new RestResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Hits list could not be read", "No hits found"),
 				HttpStatus.OK);
 	}
 
 
 
-	@GetMapping("/getConfiguration")
-	public ResponseEntity<RestResponse> getConfiguration(@RequestParam Map<String, String> params,
+	@GetMapping("/getHits")
+	public ResponseEntity<RestResponse> getHits(@RequestParam Map<String, String> params,
 			@RequestHeader Map<String, String> headers) throws CsServiceException {
 
 		Map<String, String> decodedParams = null;
@@ -62,27 +62,18 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			List<HitsEntity> hitsEntities = clubStore.listConfigurationsSafe(decodedParams, headers);
-			
-			
-				return new ResponseEntity<RestResponse>(new ListConfigurationResponse(hitsEntities), HttpStatus.OK);
+			HitsEntity hitsEntities = hitStore.getHitsSafe(decodedParams, headers);
+			return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntities), HttpStatus.OK);
 			
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
-					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Configuration could not be read", dse.getMessage()),
+					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Hits could not be read", dse.getMessage()),
 					HttpStatus.OK);
 		}
 	}
-	
-//	@PostMapping("createConfiguration")
-//   public ResponseEntity<RestResponse> createConfiguration(@RequestBody WriteRequest request) {
-//		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.ACCEPTED,
-//				"Configuration could not be updated", "bla"), HttpStatus.OK);
-//	}
 
-
-	@PostMapping("/createConfiguration")
-	public ResponseEntity<RestResponse> createConfiguration(@RequestBody WriteRequest requestBody,
+	@PostMapping("/createHits")
+	public ResponseEntity<RestResponse> createHits(@RequestBody HitsWriteRequest requestBody,
 			@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) {
 
 		Map<String, String> decodedParams = null;
@@ -94,20 +85,20 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			HitsEntity hitsEntity = clubStore.createConfigurationSafe(requestBody, decodedParams, headers);
+			HitsEntity hitsEntity = hitStore.createHitsSafe(requestBody, decodedParams, headers);
 			if (null != hitsEntity) {
-				return new ResponseEntity<RestResponse>(new ConfigResponse(hitsEntity), HttpStatus.OK);
+				return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntity), HttpStatus.OK);
 			}
 		} catch (CsServiceException e) {
 			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.valueOf(e.getErrorId().intValue()),
-					"Configuration could not be created", e.getMessage()), HttpStatus.OK);
+					"Hits could not be created", e.getMessage()), HttpStatus.OK);
 		}
-		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Configuration not created",
-				"Configuration still exists, data invalid or not complete"), HttpStatus.OK);
+		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hits not created",
+				"Hits entry still exists, data invalid or not complete"), HttpStatus.OK);
 	}
 
-	@PutMapping("/updateConfiguration")
-	public ResponseEntity<RestResponse> updateConfiguration(@RequestBody WriteRequest requestBody,
+	@PutMapping("/updateHits")
+	public ResponseEntity<RestResponse> updateHits(@RequestBody HitsWriteRequest requestBody,
 			@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) {
 
 		Map<String, String> decodedParams = null;
@@ -119,20 +110,20 @@ public class ConfigurationController extends MasterController {
 		}
 
 		try {
-			HitsEntity hitsEntity = clubStore.updateConfigurationSafe(requestBody, decodedParams, headers);
+			HitsEntity hitsEntity = hitStore.updateHitsSafe(requestBody, decodedParams, headers);
 			if (null != hitsEntity) {
-				return new ResponseEntity<RestResponse>(new ConfigResponse(hitsEntity), HttpStatus.OK);
+				return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntity), HttpStatus.OK);
 			}
 		} catch (CsServiceException e) {
 			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.valueOf(e.getErrorId().intValue()),
 					"Configuration could not be updated", e.getMessage()), HttpStatus.OK);
 		}
-		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Configuration not updated",
-				"Configuration does not exist, data invalid or not complete"), HttpStatus.OK);
+		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hits not updated",
+				"Hits entry does not exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
-	@DeleteMapping("/dropConfiguration")
-	public ResponseEntity<RestResponse> dropConfiguration(@RequestParam Map<String, String> params,
+	@DeleteMapping("/dropHits")
+	public ResponseEntity<RestResponse> dropHits(@RequestParam Map<String, String> params,
 			@RequestHeader Map<String, String> headers) {
 		Map<String, String> decodedParams = null;
 		try {
@@ -145,15 +136,15 @@ public class ConfigurationController extends MasterController {
 		String configurationIdAsString = decodedParams.get("configurationId");
 		if (null == configurationIdAsString) {
 			return new ResponseEntity<RestResponse>(
-					new RestResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Configuration not deleted", "Configuration id is empty"),
+					new RestResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Hits not deleted", "Hits id is empty"),
 					HttpStatus.OK);
 		}
 
 		try {
-			clubStore.dropConfigurationSafe(decodedParams, headers);
+			hitStore.dropConfigurationSafe(decodedParams, headers);
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
-					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Configuration not deleted", dse.getMessage()),
+					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Hits not deleted", dse.getMessage()),
 					HttpStatus.OK);
 		}
 
