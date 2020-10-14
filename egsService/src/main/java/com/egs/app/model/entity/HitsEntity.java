@@ -28,7 +28,7 @@ import com.egs.app.types.HitCategory;
 public class HitsEntity {
 	
 	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long _id;
 
 	@Column(nullable = false)

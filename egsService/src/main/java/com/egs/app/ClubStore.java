@@ -201,8 +201,8 @@ public class ClubStore {
 		}
 
 		try {
-			ClubEntity hitsEntity = clubModel.save(clubContainer);
-			return hitsEntity;
+			ClubEntity clubEntity = clubModel.save(clubContainer);
+			return clubEntity;
 		} catch (Exception ex) {
 			return null;
 		}

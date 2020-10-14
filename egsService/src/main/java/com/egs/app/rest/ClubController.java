@@ -1,5 +1,6 @@
 package com.egs.app.rest;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -101,6 +102,7 @@ public class ClubController extends MasterController {
 		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Club not created",
 				"Club entry still exists, data invalid or not complete"), HttpStatus.OK);
 	}
+
 
 	@PutMapping("/updateClub")
 	public ResponseEntity<RestResponse> updateClub(@RequestBody ClubWriteRequest requestBody,
