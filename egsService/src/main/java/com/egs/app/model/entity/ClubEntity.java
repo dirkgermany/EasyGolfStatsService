@@ -41,7 +41,6 @@ public class ClubEntity {
 	}
 
 	public ClubEntity(Long userId, ClubType clubType, String clubName) {
-		this._id = _id;
 		this.userId = userId;
 		this.clubType = clubType;
 		this.clubName = clubName;

@@ -94,6 +94,10 @@ public class ClubStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
 		String userIdAsString = requestParams.get("userId");
+		if (null == userIdAsString) {
+			userIdAsString = headers.get("userid");
+		}
+		
 		if (null == userIdAsString || userIdAsString.isEmpty()) {
 			throw new CsServiceException(404L, "Cannot search clubs for user", "userId is null or empty");
 		}
@@ -180,7 +184,7 @@ public class ClubStore {
 		}
 
 		List<ClubEntity> clubList = clubModel.findList(userId);
-			if (null == clubList) {
+			if (null == clubList || clubList.isEmpty()) {
 				throw new CsServiceException(401L, "Club list is empty", "no club found for user");
 			}
 
@@ -231,6 +235,9 @@ public class ClubStore {
 
 		String clubIdAsString = requestParams.get("clubId");
 		if (null == clubIdAsString) {
+			clubIdAsString = headers.get("clubid");
+		}
+		if (clubIdAsString == null || clubIdAsString.isEmpty()) {
 			throw new CsServiceException(404L, "Cannot drop club", "Club id is empty");
 		}
 		Long clubId = extractLong(clubIdAsString);

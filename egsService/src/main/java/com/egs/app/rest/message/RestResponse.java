@@ -20,7 +20,7 @@ public class RestResponse {
 		return SERVICE_NAME;
 	}
 
-	private void setHttpStatus(HttpStatus httpStatus) {
+	public void setHttpStatus(HttpStatus httpStatus) {
 		this.httpStatus = httpStatus;
 	}
 

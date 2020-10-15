@@ -1,5 +1,6 @@
 package com.egs.app.rest;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +24,10 @@ import com.egs.app.model.entity.HitsEntity;
 import com.egs.app.rest.message.HitsResponse;
 import com.egs.app.rest.message.HitsWriteRequest;
 import com.egs.app.rest.message.ListClubsResponse;
+import com.egs.app.rest.message.ClubListWriteResponse;
 import com.egs.app.rest.message.ClubResponse;
 import com.egs.app.rest.message.ClubWriteRequest;
+import com.egs.app.rest.message.ClubWriteResponse;
 import com.egs.app.rest.message.DropResponse;
 import com.egs.app.rest.message.ListHitsResponse;
 import com.egs.app.rest.message.RestResponse;
@@ -93,7 +96,7 @@ public class ClubController extends MasterController {
 		try {
 			ClubEntity clubEntity = clubStore.createClubSafe(requestBody, decodedParams, headers);
 			if (null != clubEntity) {
-				return new ResponseEntity<RestResponse>(new ClubResponse(clubEntity), HttpStatus.OK);
+				return new ResponseEntity<RestResponse>(new ClubWriteResponse(clubEntity), HttpStatus.OK);
 			}
 		} catch (CsServiceException e) {
 			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.valueOf(e.getErrorId().intValue()),
@@ -101,6 +104,49 @@ public class ClubController extends MasterController {
 		}
 		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Club not created",
 				"Club entry still exists, data invalid or not complete"), HttpStatus.OK);
+	}
+
+
+	@PostMapping("/createClubs")
+	public ResponseEntity<RestResponse> createClubs(@RequestBody List<ClubWriteRequest> requestBodyList,
+			@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) {
+
+		Map<String, String> decodedParams = null;
+		try {
+			decodedParams = decodeHttpMap(params);
+		} catch (Exception e) {
+			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.BAD_REQUEST, "Invalid requestParams",
+					"RequestParams couldn't be decoded"), HttpStatus.OK);
+		}
+
+		ClubListWriteResponse response = new ClubListWriteResponse(null);
+		response.setHttpStatus(HttpStatus.OK);
+		
+		List<ClubEntity> clubs = new ArrayList<>();
+		Iterator<ClubWriteRequest> it = requestBodyList.iterator();
+		while (it.hasNext()) {
+			ClubWriteRequest requestBody = it.next();
+			
+			try {
+				ClubEntity clubEntity = clubStore.createClubSafe(requestBody, decodedParams, headers);
+				if (null != clubEntity) {
+					clubs.add(clubEntity);
+				}
+			} catch (CsServiceException e) {
+				response.setHttpStatus(HttpStatus.CONFLICT);
+				response.setResult("One or more clubs not stored. Stored clubs see attached list.");
+				response.setDescription(response.getDescription() + "\nClub " + requestBody.getClubEntity().getClubName() + " already exists or could not be stored;");
+				response.setDescription("One or more clubs are not stored");
+			}
+			
+		}
+		if (clubs.size() > 0) {
+			response.setClubs(clubs);
+			return new ResponseEntity<RestResponse>(response, HttpStatus.OK);
+		}
+
+		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Clubs are not created",
+				"Entries still exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
 
@@ -129,8 +175,8 @@ public class ClubController extends MasterController {
 				"Club entry does not exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
-	@DeleteMapping("/dropClub")
-	public ResponseEntity<RestResponse> dropClub(@RequestParam Map<String, String> params,
+	@DeleteMapping("/deleteClub")
+	public ResponseEntity<RestResponse> deleteClub(@RequestParam Map<String, String> params,
 			@RequestHeader Map<String, String> headers) {
 		Map<String, String> decodedParams = null;
 		try {
@@ -142,8 +188,11 @@ public class ClubController extends MasterController {
 
 		String clubIdAsString = decodedParams.get("clubId");
 		if (null == clubIdAsString) {
+			clubIdAsString = headers.get("clubid");
+		}
+		if (clubIdAsString == null || clubIdAsString.isEmpty()) {
 			return new ResponseEntity<RestResponse>(
-					new RestResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Club not deleted", "clubId is empty"),
+					new RestResponse(HttpStatus.BAD_REQUEST, "Club not deleted", "clubId is empty"),
 					HttpStatus.OK);
 		}
 
@@ -155,6 +204,6 @@ public class ClubController extends MasterController {
 					HttpStatus.OK);
 		}
 
-		return new ResponseEntity<RestResponse>(new DropResponse(HttpStatus.NO_CONTENT), HttpStatus.NO_CONTENT);
+		return new ResponseEntity<RestResponse>(new DropResponse(HttpStatus.OK), HttpStatus.OK);
 	}
 }

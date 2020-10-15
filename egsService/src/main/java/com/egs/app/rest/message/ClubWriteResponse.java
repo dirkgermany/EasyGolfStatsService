@@ -2,23 +2,23 @@ package com.egs.app.rest.message;
 
 import org.springframework.http.HttpStatus;
 
-import com.egs.app.model.entity.HitsEntity;
+import com.egs.app.model.entity.ClubEntity;
 
 public class ClubWriteResponse extends RestResponse{
-    private HitsEntity hitsEntity;
+    private ClubEntity clubEntity;
     	
-	public ClubWriteResponse (HitsEntity hitsEntity) {
-		super(HttpStatus.CREATED, "OK", "Configuration created");
+	public ClubWriteResponse (ClubEntity clubEntity) {
+		super(HttpStatus.CREATED, "OK", "Club created");
 		
-		setUser(hitsEntity);
+		setClub(clubEntity);
 	}  
 
-	private void setUser(HitsEntity hitsEntity) {
-		this.hitsEntity = hitsEntity;
+	private void setClub(ClubEntity clubEntity) {
+		this.clubEntity = clubEntity;
 	}
 	
-	public HitsEntity getUser() {
-		return hitsEntity;
+	public ClubEntity getClub() {
+		return clubEntity;
 	}
 	
 }
