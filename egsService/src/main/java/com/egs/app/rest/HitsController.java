@@ -1,5 +1,7 @@
 package com.egs.app.rest;
 
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -15,11 +17,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.egs.app.HitStore;
+import com.egs.app.HitsStore;
 import com.egs.app.model.entity.HitsEntity;
 import com.egs.app.rest.message.HitsResponse;
 import com.egs.app.rest.message.HitsWriteRequest;
 import com.egs.app.rest.message.DropResponse;
+import com.egs.app.rest.message.HitsListWriteResponse;
 import com.egs.app.rest.message.ListHitsResponse;
 import com.egs.app.rest.message.RestResponse;
 import com.egs.exception.CsServiceException;
@@ -27,13 +30,13 @@ import com.egs.exception.CsServiceException;
 @RestController
 public class HitsController extends MasterController {
 	@Autowired
-	private HitStore hitStore;
+	private HitsStore hitsStore;
 	
 	@GetMapping("/listSessionHits")
 	public ResponseEntity<RestResponse> listSessionHits(@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) throws CsServiceException {
 
 		try {
-			List<HitsEntity> hitsEntities = hitStore.listSessionHitsSafe(params, headers);
+			List<HitsEntity> hitsEntities = hitsStore.listSessionHitsSafe(params, headers);
 			if (null != hitsEntities) {
 				return new ResponseEntity<RestResponse>(new ListHitsResponse(hitsEntities), HttpStatus.OK);
 			}
@@ -62,7 +65,7 @@ public class HitsController extends MasterController {
 		}
 
 		try {
-			HitsEntity hitsEntities = hitStore.getHitsSafe(decodedParams, headers);
+			HitsEntity hitsEntities = hitsStore.getHitsSafe(decodedParams, headers);
 			return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntities), HttpStatus.OK);
 			
 		} catch (CsServiceException dse) {
@@ -85,7 +88,7 @@ public class HitsController extends MasterController {
 		}
 
 		try {
-			HitsEntity hitsEntity = hitStore.createHitsSafe(requestBody, decodedParams, headers);
+			HitsEntity hitsEntity = hitsStore.createHitsSafe(requestBody, decodedParams, headers);
 			if (null != hitsEntity) {
 				return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntity), HttpStatus.OK);
 			}
@@ -95,6 +98,48 @@ public class HitsController extends MasterController {
 		}
 		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hits not created",
 				"Hits entry still exists, data invalid or not complete"), HttpStatus.OK);
+	}
+	
+	@PostMapping("/createHitsCollection")
+	public ResponseEntity<RestResponse> createHitsCollection(@RequestBody List<HitsWriteRequest> requestBodyList,
+			@RequestParam Map<String, String> params, @RequestHeader Map<String, String> headers) {
+
+		Map<String, String> decodedParams = null;
+		try {
+			decodedParams = decodeHttpMap(params);
+		} catch (Exception e) {
+			return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.BAD_REQUEST, "Invalid requestParams",
+					"RequestParams couldn't be decoded"), HttpStatus.OK);
+		}
+
+		HitsListWriteResponse response = new HitsListWriteResponse(null);
+		response.setHttpStatus(HttpStatus.OK);
+		
+		List<HitsEntity> hitsList = new ArrayList<>();
+		Iterator<HitsWriteRequest> it = requestBodyList.iterator();
+		while (it.hasNext()) {
+			HitsWriteRequest requestBody = it.next();
+			
+			try {
+				HitsEntity hitsEntity = hitsStore.createHitsSafe(requestBody, decodedParams, headers);
+				if (null != hitsEntity) {
+					hitsList.add(hitsEntity);
+				}
+			} catch (CsServiceException e) {
+				response.setHttpStatus(HttpStatus.CONFLICT);
+				response.setResult("One or more hit entries not stored. Stored hit entries see attached list.");
+				response.setDescription(response.getDescription() + "\nHits " + requestBody.getHitsEntity().getSessionDate() + requestBody.getHitsEntity().getHitCategory().name() + requestBody.getHitsEntity().getClubType() + " already exists or could not be stored;");
+				response.setDescription("One or more hit entries are not stored");
+			}
+		}
+		
+		if (hitsList.size() > 0) {
+			response.setHitsList(hitsList);
+			return new ResponseEntity<RestResponse>(response, HttpStatus.OK);
+		}
+
+		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Clubs are not created",
+				"Entries still exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
 	@PutMapping("/updateHits")
@@ -110,7 +155,7 @@ public class HitsController extends MasterController {
 		}
 
 		try {
-			HitsEntity hitsEntity = hitStore.updateHitsSafe(requestBody, decodedParams, headers);
+			HitsEntity hitsEntity = hitsStore.updateHitsSafe(requestBody, decodedParams, headers);
 			if (null != hitsEntity) {
 				return new ResponseEntity<RestResponse>(new HitsResponse(hitsEntity), HttpStatus.OK);
 			}
@@ -122,8 +167,8 @@ public class HitsController extends MasterController {
 				"Hits entry does not exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
-	@DeleteMapping("/dropHits")
-	public ResponseEntity<RestResponse> dropHits(@RequestParam Map<String, String> params,
+	@DeleteMapping("/deleteHits")
+	public ResponseEntity<RestResponse> deleteHits(@RequestParam Map<String, String> params,
 			@RequestHeader Map<String, String> headers) {
 		Map<String, String> decodedParams = null;
 		try {
@@ -141,7 +186,7 @@ public class HitsController extends MasterController {
 		}
 
 		try {
-			hitStore.dropConfigurationSafe(decodedParams, headers);
+			hitsStore.dropConfigurationSafe(decodedParams, headers);
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
 					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Hits not deleted", dse.getMessage()),

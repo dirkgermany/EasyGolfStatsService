@@ -18,18 +18,13 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.egs.app.ClubStore;
-import com.egs.app.HitStore;
 import com.egs.app.model.entity.ClubEntity;
-import com.egs.app.model.entity.HitsEntity;
-import com.egs.app.rest.message.HitsResponse;
-import com.egs.app.rest.message.HitsWriteRequest;
 import com.egs.app.rest.message.ListClubsResponse;
 import com.egs.app.rest.message.ClubListWriteResponse;
 import com.egs.app.rest.message.ClubResponse;
 import com.egs.app.rest.message.ClubWriteRequest;
 import com.egs.app.rest.message.ClubWriteResponse;
 import com.egs.app.rest.message.DropResponse;
-import com.egs.app.rest.message.ListHitsResponse;
 import com.egs.app.rest.message.RestResponse;
 import com.egs.exception.CsServiceException;
 

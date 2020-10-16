@@ -15,9 +15,9 @@ public class HitsWriteRequest extends RestRequest {
 		this.hitsEntity = hitsEntity;
     }
     
-    public HitsWriteRequest(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType, Integer hitsGood, Integer hitsNeutral, Integer hitsBad) {
+    public HitsWriteRequest(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
 		super("CS 0.0.1");
-		hitsEntity = new HitsEntity(userId, sessionDate, hitCategory, clubType, hitsGood, hitsNeutral, hitsBad);
+		hitsEntity = new HitsEntity(userId, sessionDate, hitCategory, clubType, hitCountGood, hitCountNeutral, hitCountBad);
     }
     
     public HitsEntity getHitsEntity() {

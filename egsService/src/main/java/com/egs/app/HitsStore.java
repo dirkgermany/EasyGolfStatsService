@@ -27,7 +27,7 @@ import com.egs.exception.CsServiceException;
  */
 @Controller
 @ComponentScan
-public class HitStore {
+public class HitsStore {
 
 	@Autowired
 	private HitModel hitModel;

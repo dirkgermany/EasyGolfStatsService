@@ -18,7 +18,7 @@ public class PingFactory {
 	ClubStore clubStore;
 	
 	@Autowired
-	HitStore hitsStore;
+	HitsStore hitsStore;
 
 	@Autowired
 	Properties properties;

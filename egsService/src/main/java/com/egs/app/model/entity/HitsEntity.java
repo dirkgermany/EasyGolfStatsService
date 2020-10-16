@@ -63,7 +63,7 @@ public class HitsEntity {
 		this.sessionDate = sessionDate;
 		this.hitCategory = hitCategory;
 		this.clubType = clubType;
-		this.hitCountGood = hitCountBad;
+		this.hitCountGood = hitCountGood;
 		this.hitCountNeutral = hitCountNeutral;
 		this.hitCountBad = hitCountBad;
 	}
