@@ -36,14 +36,18 @@ public class ClubEntity {
 
 	@Column(nullable = false)
 	private String clubName;
+	
+	@Column(nullable = false)
+    private Integer clubIndex;
 
 	public ClubEntity() {
 	}
 
-	public ClubEntity(Long userId, ClubType clubType, String clubName) {
+	public ClubEntity(Long userId, ClubType clubType, String clubName, Integer clubIndex) {
 		this.userId = userId;
 		this.clubType = clubType;
 		this.clubName = clubName;
+		this.clubIndex = clubIndex;
 	}
 
 	public Long get_id() {
@@ -73,6 +77,14 @@ public class ClubEntity {
 	public void setClubName(String clubName) {
 		this.clubName = clubName;
 	}
+	
+	public Integer getClubIndex() {
+		return clubIndex;
+	}
+	
+	public void setClubIndex (Integer clubIndex) {
+		this.clubIndex = clubIndex;
+	}
 
 	/**
 	 * Updates Entity values.
@@ -83,5 +95,6 @@ public class ClubEntity {
 		}
 		this.clubName = updateClub.getClubName();
 		this.clubType = updateClub.getClubType();
+		this.clubIndex = updateClub.getClubIndex();
 	}
 }

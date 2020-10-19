@@ -138,7 +138,7 @@ public class HitsController extends MasterController {
 			return new ResponseEntity<RestResponse>(response, HttpStatus.OK);
 		}
 
-		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Clubs are not created",
+		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hit entries are not created",
 				"Entries still exist, data invalid or not complete"), HttpStatus.OK);
 	}
 

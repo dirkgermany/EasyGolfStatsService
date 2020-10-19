@@ -15,9 +15,9 @@ public class ClubWriteRequest extends RestRequest {
 		this.clubEntity = clubEntity;
     }
     
-    public ClubWriteRequest(Long userId, ClubType clubType, String clubName) {
+    public ClubWriteRequest(Long userId, ClubType clubType, String clubName, Integer clubIndex) {
 		super("CS 0.0.1");
-		clubEntity = new ClubEntity(userId, clubType, clubName);
+		clubEntity = new ClubEntity(userId, clubType, clubName, clubIndex);
     }
     
     public ClubWriteRequest(List<ClubEntity> clubs) {

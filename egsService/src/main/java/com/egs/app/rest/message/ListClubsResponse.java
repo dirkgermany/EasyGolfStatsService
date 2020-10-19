@@ -24,6 +24,7 @@ public class ListClubsResponse extends RestResponse{
 		if (clubEntities.size() == 1) {
 			setIsList(false);
 			setClub(clubEntities.get(0));
+			setClubs(clubEntities);
 		} else {
 			setIsList(true);
 			setClubs(clubEntities);
