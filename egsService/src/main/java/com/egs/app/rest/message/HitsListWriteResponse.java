@@ -6,11 +6,13 @@ import com.egs.app.model.entity.HitsEntity;
 
 public class HitsListWriteResponse extends RestResponse{
     private List<HitsEntity> hitsEntityList;
-    	
-	public HitsListWriteResponse (List<HitsEntity> hitsEntityList) {
+    private String fileName;
+
+	public HitsListWriteResponse (List<HitsEntity> hitsEntityList, String fileName) {
 		super(HttpStatus.CREATED, "OK", "Hits created");
 		
 		setHitsList(hitsEntityList);
+		setFileName(fileName);
 	}  
 
 	public void setHitsList(List<HitsEntity> hitsEntityList) {
@@ -21,4 +23,12 @@ public class HitsListWriteResponse extends RestResponse{
 		return hitsEntityList;
 	}
 	
+
+	public String getFileName() {
+		return this.fileName;
+	}
+	
+	public void setFileName(String fileName) {
+		this.fileName = fileName;
+	}
 }

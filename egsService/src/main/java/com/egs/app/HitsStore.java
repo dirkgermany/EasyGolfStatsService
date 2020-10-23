@@ -1,6 +1,6 @@
 package com.egs.app;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -51,7 +51,7 @@ public class HitsStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
 		String userIdAsString = requestParams.get("userId");
-		String sessionDateAsString = requestParams.get("sessionDate");
+		String sessionDateTimeAsString = requestParams.get("sessionDateTime");
 		String hitCategoryAsString = requestParams.get("hitCategory");
 		String clubTypeAsString = requestParams.get("clubType");
 		
@@ -59,7 +59,7 @@ public class HitsStore {
 			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
 		}
 		
-		if (null == sessionDateAsString || sessionDateAsString.isEmpty()) {
+		if (null == sessionDateTimeAsString || sessionDateTimeAsString.isEmpty()) {
 			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
 		}
 
@@ -72,11 +72,11 @@ public class HitsStore {
 		}
 
 		Long userId = extractLong(userIdAsString);
-		LocalDate sessionDate = LocalDate.parse(sessionDateAsString);
+		LocalDateTime sessionDateTime = LocalDateTime.parse(sessionDateTimeAsString);
 		HitCategory hitCategory = HitCategory.valueOf(hitCategoryAsString);
 		ClubType clubType = ClubType.valueOf(clubTypeAsString);
 
-		HitsEntity hitsEntity = getHitsByData(userId, sessionDate, hitCategory, clubType);
+		HitsEntity hitsEntity = getHitsByData(userId, sessionDateTime, hitCategory, clubType);
 		if (null == hitsEntity) {
 			throw new CsServiceException(404L, "Hits not found", "Unknown userId, sessionDate, hitCategory and clubType");
 		}
@@ -100,20 +100,20 @@ public class HitsStore {
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
 		String userIdAsString = requestParams.get("userId");
-		String sessionDateAsString = requestParams.get("sessionDate");
+		String sessionDateTimeAsString = requestParams.get("sessionDateTime");
 		
 		if (null == userIdAsString || userIdAsString.isEmpty()) {
 			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
 		}
 		
-		if (null == sessionDateAsString || sessionDateAsString.isEmpty()) {
+		if (null == sessionDateTimeAsString || sessionDateTimeAsString.isEmpty()) {
 			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
 		}
 
-		LocalDate sessionDate = LocalDate.parse(sessionDateAsString);
+		LocalDateTime sessionDateTime = LocalDateTime.parse(sessionDateTimeAsString);
 		Long userId = extractLong(userIdAsString);
 
-		List<HitsEntity> hitsEntitys = getSessionHitsList(userId, sessionDate);
+		List<HitsEntity> hitsEntitys = getSessionHitsList(userId, sessionDateTime);
 		if (null == hitsEntitys) {
 			throw new CsServiceException(404L, "Hits not found", "No match for userId, sessionDate");
 		}
@@ -188,9 +188,9 @@ public class HitsStore {
 		return updateHits(hitsToUpdate);
 	}
 
-	private List<HitsEntity> getSessionHitsList(Long userId, LocalDate sessionDate) throws CsServiceException {
+	private List<HitsEntity> getSessionHitsList(Long userId, LocalDateTime sessionDateTime) throws CsServiceException {
 		ArrayList<HitsEntity> hitsEntitys = new ArrayList<>();
-		hitModel.findList(userId, sessionDate).forEach(hits -> {
+		hitModel.findList(userId, sessionDateTime).forEach(hits -> {
 			hitsEntitys.add(hits);
 		});	
 
@@ -204,14 +204,14 @@ public class HitsStore {
 
 	private HitsEntity createHits(HitsEntity hitsContainer) throws CsServiceException {
 
-		if (null == hitsContainer.getUserId() || null == hitsContainer.getSessionDate() || null == hitsContainer.getHitCategory()
+		if (null == hitsContainer.getUserId() || null == hitsContainer.getSessionDateTime() || null == hitsContainer.getHitCategory()
 				|| null == hitsContainer.getClubType()) {
-			return null;
+			throw new CsServiceException(401L, "Hits entry not created", "userId or sessionId is empty");
 		}
 
 		// does the Configuration already exists?
 		//
-		if (null != getHitsByData(hitsContainer.getUserId(), hitsContainer.getSessionDate(), hitsContainer.getHitCategory(), hitsContainer.getClubType())) {
+		if (null != getHitsByData(hitsContainer.getUserId(), hitsContainer.getSessionDateTime(), hitsContainer.getHitCategory(), hitsContainer.getClubType())) {
 			throw new CsServiceException(409L, "Hits entry not created",
 					"entry already exists, try update method");
 		}
@@ -261,8 +261,8 @@ public class HitsStore {
 		dropHits(hitsEntity.get_id());
 	}
 	
-	private HitsEntity getHitsByData(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType) {
-		return hitModel.find(userId, sessionDate, hitCategory, clubType);
+	private HitsEntity getHitsByData(Long userId, LocalDateTime sessionDateTime, HitCategory hitCategory, ClubType clubType) {
+		return hitModel.find(userId, sessionDateTime, hitCategory, clubType);
 	}
 
 	public HitsEntity getHits(Long _id) {

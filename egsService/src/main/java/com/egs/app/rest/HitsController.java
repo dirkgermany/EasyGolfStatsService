@@ -112,7 +112,7 @@ public class HitsController extends MasterController {
 					"RequestParams couldn't be decoded"), HttpStatus.OK);
 		}
 
-		HitsListWriteResponse response = new HitsListWriteResponse(null);
+		HitsListWriteResponse response = new HitsListWriteResponse(null, headers.get("fileName"));
 		response.setHttpStatus(HttpStatus.OK);
 		
 		List<HitsEntity> hitsList = new ArrayList<>();
@@ -128,7 +128,7 @@ public class HitsController extends MasterController {
 			} catch (CsServiceException e) {
 				response.setHttpStatus(HttpStatus.CONFLICT);
 				response.setResult("One or more hit entries not stored. Stored hit entries see attached list.");
-				response.setDescription(response.getDescription() + "\nHits " + requestBody.getHitsEntity().getSessionDate() + requestBody.getHitsEntity().getHitCategory().name() + requestBody.getHitsEntity().getClubType() + " already exists or could not be stored;");
+				response.setDescription(response.getDescription() + "\nHits " + requestBody.getHitsEntity().getSessionDateTime() + requestBody.getHitsEntity().getHitCategory().name() + requestBody.getHitsEntity().getClubType() + " already exists or could not be stored;");
 				response.setDescription("One or more hit entries are not stored");
 			}
 		}

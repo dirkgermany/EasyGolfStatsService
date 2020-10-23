@@ -46,6 +46,4 @@ public class ListClubsResponse extends RestResponse{
 	public void setClub(ClubEntity clubEntity) {
 		this.clubEntity = clubEntity;
 	}
-
-
 }

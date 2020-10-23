@@ -1,6 +1,6 @@
 package com.egs.app.model.entity;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -21,9 +21,9 @@ import com.egs.app.types.HitCategory;
 @Entity
 @Component
 @Table(name = "Hits", uniqueConstraints = {
-		@UniqueConstraint(columnNames = { "userId", "sessionDate", "hitCategory", "clubType" }) }, indexes = {
-				@Index(name = "idx_hits_primary", columnList = "userId, sessionDate, hitCategory, clubType"),
-				@Index(name = "idx_hits_secondary", columnList = "userId, sessionDate") })
+		@UniqueConstraint(columnNames = { "userId", "sessionDateTime", "hitCategory", "clubType" }) }, indexes = {
+				@Index(name = "idx_hits_primary", columnList = "userId, sessionDateTime, hitCategory, clubType"),
+				@Index(name = "idx_hits_secondary", columnList = "userId, sessionDateTime") })
 
 public class HitsEntity {
 	
@@ -35,7 +35,7 @@ public class HitsEntity {
 	private Long userId;
 	
 	@Column(nullable = false)
-	private LocalDate sessionDate;
+	private LocalDateTime sessionDateTime;
 	
 	@Column(nullable = false) 
 	@Enumerated(EnumType.STRING)
@@ -58,9 +58,9 @@ public class HitsEntity {
 	public HitsEntity() {
 	}
 
-	public HitsEntity(Long userId, LocalDate sessionDate, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
+	public HitsEntity(Long userId, LocalDateTime sessionDateTime, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
 		this.userId = userId;
-		this.sessionDate = sessionDate;
+		this.sessionDateTime = sessionDateTime;
 		this.hitCategory = hitCategory;
 		this.clubType = clubType;
 		this.hitCountGood = hitCountGood;
@@ -96,12 +96,12 @@ public class HitsEntity {
 		this.clubType = clubType;
 	}
 	
-	public LocalDate getSessionDate () {
-		return this.sessionDate;
+	public LocalDateTime getSessionDateTime () {
+		return this.sessionDateTime;
 	}
 	
-	public void setSessionDate (LocalDate sessionDate) {
-		this.sessionDate = sessionDate;
+	public void setSessionDateTime (LocalDateTime sessionDateTime) {
+		this.sessionDateTime = sessionDateTime;
 	}
 	
 	public Integer getHitCountGood () {
@@ -137,7 +137,7 @@ public class HitsEntity {
 		}
 		this.hitCategory = updateHits.getHitCategory();
 		this.clubType = updateHits.getClubType();
-		this.sessionDate = updateHits.getSessionDate();
+		this.sessionDateTime = updateHits.getSessionDateTime();
 		this.hitCountGood = updateHits.getHitCountGood();
 		this.hitCountNeutral = updateHits.getHitCountNeutral();
 		this.hitCountBad = updateHits.getHitCountBad();
