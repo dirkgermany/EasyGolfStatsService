@@ -17,6 +17,7 @@ import com.egs.app.model.entity.HitsEntity;
 import com.egs.app.rest.message.HitsWriteRequest;
 import com.egs.app.types.ClubType;
 import com.egs.app.types.HitCategory;
+import com.egs.app.types.RestError;
 import com.egs.exception.CsServiceException;
 
 /**
@@ -56,19 +57,19 @@ public class HitsStore {
 		String clubTypeAsString = requestParams.get("clubType");
 		
 		if (null == userIdAsString || userIdAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
+			throw new CsServiceException(404L, RestError.EMPTY_USER_ID.name(),"Cannot search session hits");
 		}
 		
 		if (null == sessionDateTimeAsString || sessionDateTimeAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
+			throw new CsServiceException(404L,  RestError.EMPTY_SESSION_ID.name(),"Cannot search session hits");
 		}
 
 		if (null == hitCategoryAsString || hitCategoryAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "hitCategory is null or empty");
+			throw new CsServiceException(404L, RestError.EMPTY_HIT_CATEGORY.name(),"Cannot search session hits");
 		}
 
 		if (null == clubTypeAsString || clubTypeAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "clubType is null or empty");
+			throw new CsServiceException(404L,  RestError.EMPTY_CLUB_TYPE.name(),"Cannot search session hits");
 		}
 
 		Long userId = extractLong(userIdAsString);
@@ -78,7 +79,7 @@ public class HitsStore {
 
 		HitsEntity hitsEntity = getHitsByData(userId, sessionDateTime, hitCategory, clubType);
 		if (null == hitsEntity) {
-			throw new CsServiceException(404L, "Hits not found", "Unknown userId, sessionDate, hitCategory and clubType");
+			throw new CsServiceException(404L, RestError.ENTITY_NOT_FOUND.name(), "Hits not found");
 		}
 		PermissionCheck.isReadPermissionSet(requestorUserId, hitsEntity.getUserId(), rights);
 		return hitsEntity;
@@ -103,11 +104,11 @@ public class HitsStore {
 		String sessionDateTimeAsString = requestParams.get("sessionDateTime");
 		
 		if (null == userIdAsString || userIdAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "userId is null or empty");
+			throw new CsServiceException(404L, RestError.EMPTY_USER_ID.name(), "Cannot search session hits");
 		}
 		
 		if (null == sessionDateTimeAsString || sessionDateTimeAsString.isEmpty()) {
-			throw new CsServiceException(404L, "Cannot search session hits", "sessionDate is null or empty");
+			throw new CsServiceException(404L, RestError.EMPTY_SESSION_ID.name(), "Cannot search session hits");
 		}
 
 		LocalDateTime sessionDateTime = LocalDateTime.parse(sessionDateTimeAsString);
@@ -115,7 +116,7 @@ public class HitsStore {
 
 		List<HitsEntity> hitsEntitys = getSessionHitsList(userId, sessionDateTime);
 		if (null == hitsEntitys) {
-			throw new CsServiceException(404L, "Hits not found", "No match for userId, sessionDate");
+			throw new CsServiceException(404L, RestError.ENTITY_NOT_FOUND.name(), "Hits not found");
 		}
 		
 		List<HitsEntity> returnList = new ArrayList<>();
@@ -173,15 +174,15 @@ public class HitsStore {
 		PermissionCheck.checkRequestedEntity(requestBody.getHitsEntity(), HitsEntity.class, "");
 
 		HitsEntity hitsUpdateData = requestBody.getHitsEntity();
-		if (null == hitsUpdateData.getUserId() || null == hitsUpdateData.get_id()) {
-			throw new CsServiceException(401L, "Cannot update hits entry", "userId is empty");
+		if (null == hitsUpdateData.getUserId() && null == hitsUpdateData.get_id()) {
+			throw new CsServiceException(401L, RestError.MISSED_VALUE.name(), "Cannot update hits entry");
 		}
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 		PermissionCheck.isWritePermissionSet(requestorUserId, hitsUpdateData.getUserId(), rights);
 
 		HitsEntity hitsToUpdate = getHits(hitsUpdateData.get_id());
 		if (null == hitsToUpdate) {
-			throw new CsServiceException(404L, "Cannot update hits entry", "No matching entity found");
+			throw new CsServiceException(404L, RestError.ENTITY_NOT_FOUND.name(), "Cannot update hits entry");
 		}
 
 		hitsToUpdate.updateFrom(hitsUpdateData);
@@ -204,16 +205,27 @@ public class HitsStore {
 
 	private HitsEntity createHits(HitsEntity hitsContainer) throws CsServiceException {
 
-		if (null == hitsContainer.getUserId() || null == hitsContainer.getSessionDateTime() || null == hitsContainer.getHitCategory()
-				|| null == hitsContainer.getClubType()) {
-			throw new CsServiceException(401L, "Hits entry not created", "userId or sessionId is empty");
+		if (null == hitsContainer.getUserId()) {
+			throw new CsServiceException(401L, RestError.EMPTY_USER_ID.name(), "Entity not created");
+		}
+		
+		if (null == hitsContainer.getSessionDateTime()) {
+			throw new CsServiceException(401L, RestError.EMPTY_SESSION_ID.name(), "Entity not created");
+
+		}
+		
+		if (null == hitsContainer.getHitCategory()) {
+			throw new CsServiceException(401L, RestError.EMPTY_HIT_CATEGORY.name(), "Entity not created");
 		}
 
-		// does the Configuration already exists?
+		if (null == hitsContainer.getClubType()) {
+			throw new CsServiceException(401L, RestError.EMPTY_CLUB_TYPE.name(), "Entity not created");
+		}
+
+		// does the entity already exists?
 		//
 		if (null != getHitsByData(hitsContainer.getUserId(), hitsContainer.getSessionDateTime(), hitsContainer.getHitCategory(), hitsContainer.getClubType())) {
-			throw new CsServiceException(409L, "Hits entry not created",
-					"entry already exists, try update method");
+			throw new CsServiceException(409L, RestError.CREATE_DUPLICATE_KEY.name(), "Entity not created");
 		}
 
 		try {
@@ -228,33 +240,32 @@ public class HitsStore {
 
 		HitsEntity storedHits = getHits(hitsUpdateData.get_id());
 		if (null == storedHits) {
-			throw new CsServiceException(401L, "Cannot update hits", "Hits not found by id");
+			throw new CsServiceException(401L, RestError.ENTITY_NOT_FOUND_BY_ID.name(), "Cannot update hits");
 		}
 		storedHits.updateFrom(hitsUpdateData);
 		storedHits = hitModel.save(storedHits);
 		if (null == storedHits) {
-			throw new CsServiceException(401L, "Hits not updated",
-					"Unknown reason but hits entry was not saved");
+			throw new CsServiceException(401L, RestError.UNKNOWN.name(), "Cannot update hits");
 		}
 		return storedHits;
 	}
 
-	public void dropConfigurationSafe(Map<String, String> requestParams, Map<String, String> headers)
+	public void dropHitsSafe(Map<String, String> requestParams, Map<String, String> headers)
 			throws CsServiceException {
 		String requestorUserIdAsString = headers.get("requestoruserid");
 		String rights = headers.get("rights");
 		PermissionCheck.checkRequestedParams(requestorUserIdAsString, rights);
 		Long requestorUserId = extractLong(requestorUserIdAsString);
 
-		String configurationIdAsString = requestParams.get("configurationId");
-		if (null == configurationIdAsString) {
-			throw new CsServiceException(404L, "Cannot drop hits", "Hits id is empty");
+		String hitsIdAsString = requestParams.get("_Id");
+		if (null == hitsIdAsString) {
+			throw new CsServiceException(404L, RestError.EMPTY_ENTITY_ID.name(), "Cannot drop hits");
 		}
-		Long configurationId = extractLong(configurationIdAsString);
+		Long hitsId = extractLong(hitsIdAsString);
 
-		HitsEntity hitsEntity = getHits(configurationId);
+		HitsEntity hitsEntity = getHits(hitsId);
 		if (null == hitsEntity) {
-			throw new CsServiceException(404L, "Hits not found", "No match for _id");
+			throw new CsServiceException(404L, RestError.ENTITY_NOT_FOUND_BY_ID.name(), "Cannot drop hits");
 		}
 
 		PermissionCheck.isDeletePermissionSet(requestorUserId, hitsEntity.getUserId(), rights);
@@ -278,8 +289,7 @@ public class HitsStore {
 		hitModel.deleteById(_id);
 		HitsEntity deletedConfiguration = getHits(_id);
 		if (null != deletedConfiguration) {
-			throw new CsServiceException(404L, "Hits not deleted",
-					"Unknown reason but hits entry was not deleted");
+			throw new CsServiceException(404L, RestError.UNKNOWN.name(), "Hits not deleted");
 		}
 	}
 
@@ -287,8 +297,7 @@ public class HitsStore {
 		try {
 			return Long.valueOf(longString);
 		} catch (Exception e) {
-			throw new CsServiceException(500L, "Extraction Long from String failed",
-					"Parameter is required but null or does not represent a Long value");
+			throw new CsServiceException(500L, RestError.MISSED_VALUE.name(), "Extraction Long from String failed");
 		}
 	}
 }

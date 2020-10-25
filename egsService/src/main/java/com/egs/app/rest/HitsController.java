@@ -127,9 +127,8 @@ public class HitsController extends MasterController {
 				}
 			} catch (CsServiceException e) {
 				response.setHttpStatus(HttpStatus.CONFLICT);
-				response.setResult("One or more hit entries not stored. Stored hit entries see attached list.");
-				response.setDescription(response.getDescription() + "\nHits " + requestBody.getHitsEntity().getSessionDateTime() + requestBody.getHitsEntity().getHitCategory().name() + requestBody.getHitsEntity().getClubType() + " already exists or could not be stored;");
-				response.setDescription("One or more hit entries are not stored");
+				response.setResult(e.getShortMsg());
+				response.setDescription(response.getDescription() + "Hit: " + requestBody.getHitsEntity().getSessionDateTime() + requestBody.getHitsEntity().getHitCategory().name() + requestBody.getHitsEntity().getClubType() + " already exists or could not be stored; ");
 			}
 		}
 		
@@ -138,8 +137,10 @@ public class HitsController extends MasterController {
 			return new ResponseEntity<RestResponse>(response, HttpStatus.OK);
 		}
 
-		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hit entries are not created",
-				"Entries still exist, data invalid or not complete"), HttpStatus.OK);
+		return new ResponseEntity<RestResponse>(response, HttpStatus.OK);
+		
+//		return new ResponseEntity<RestResponse>(new RestResponse(HttpStatus.NOT_MODIFIED, "Hit entries are not created",
+//				"Entries still exist, data invalid or not complete"), HttpStatus.OK);
 	}
 
 	@PutMapping("/updateHits")
@@ -186,7 +187,7 @@ public class HitsController extends MasterController {
 		}
 
 		try {
-			hitsStore.dropConfigurationSafe(decodedParams, headers);
+			hitsStore.dropHitsSafe(decodedParams, headers);
 		} catch (CsServiceException dse) {
 			return new ResponseEntity<RestResponse>(
 					new RestResponse(HttpStatus.valueOf(dse.getErrorId().intValue()), "Hits not deleted", dse.getMessage()),
