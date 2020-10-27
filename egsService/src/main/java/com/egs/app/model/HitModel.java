@@ -1,5 +1,6 @@
 package com.egs.app.model;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
 

@@ -26,39 +26,39 @@ import com.egs.app.types.HitCategory;
 				@Index(name = "idx_hits_secondary", columnList = "userId, sessionDateTime") })
 
 public class HitsEntity {
-	
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long _id;
 
 	@Column(nullable = false)
 	private Long userId;
-	
+
 	@Column(nullable = false)
 	private LocalDateTime sessionDateTime;
-	
-	@Column(nullable = false) 
+
+	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private HitCategory hitCategory;
-	
+
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING)
 	private ClubType clubType;
-	
+
 	@Column(nullable = false)
 	private Integer hitCountGood;
-	
+
 	@Column(nullable = false)
 	private Integer hitCountNeutral;
-	
+
 	@Column(nullable = false)
 	private Integer hitCountBad;
-	
 
 	public HitsEntity() {
 	}
 
-	public HitsEntity(Long userId, LocalDateTime sessionDateTime, HitCategory hitCategory, ClubType clubType, Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
+	public HitsEntity(Long userId, LocalDateTime sessionDateTime, HitCategory hitCategory, ClubType clubType,
+			Integer hitCountGood, Integer hitCountNeutral, Integer hitCountBad) {
 		this.userId = userId;
 		this.sessionDateTime = sessionDateTime;
 		this.hitCategory = hitCategory;
@@ -80,51 +80,51 @@ public class HitsEntity {
 		this.userId = userId;
 	}
 
-	public HitCategory getHitCategory () {
+	public HitCategory getHitCategory() {
 		return this.hitCategory;
 	}
-	
-	public void setHitCategory (HitCategory hitCategory) {
+
+	public void setHitCategory(HitCategory hitCategory) {
 		this.hitCategory = hitCategory;
 	}
-	
-	public ClubType getClubType () {
+
+	public ClubType getClubType() {
 		return this.clubType;
 	}
-	
-	public void setClubType (ClubType clubType) {
+
+	public void setClubType(ClubType clubType) {
 		this.clubType = clubType;
 	}
-	
-	public LocalDateTime getSessionDateTime () {
+
+	public LocalDateTime getSessionDateTime() {
 		return this.sessionDateTime;
 	}
-	
-	public void setSessionDateTime (LocalDateTime sessionDateTime) {
+
+	public void setSessionDateTime(LocalDateTime sessionDateTime) {
 		this.sessionDateTime = sessionDateTime;
 	}
-	
-	public Integer getHitCountGood () {
+
+	public Integer getHitCountGood() {
 		return this.hitCountGood;
 	}
-	
-	public void setHitCountGood (Integer hitCountGood) {
+
+	public void setHitCountGood(Integer hitCountGood) {
 		this.hitCountGood = hitCountGood;
 	}
 
-	public Integer getHitCountNeutral () {
+	public Integer getHitCountNeutral() {
 		return this.hitCountNeutral;
 	}
-	
-	public void setHitCountNeutral (Integer hitCountNeutral) {
+
+	public void setHitCountNeutral(Integer hitCountNeutral) {
 		this.hitCountNeutral = hitCountNeutral;
 	}
 
-	public Integer getHitCountBad () {
+	public Integer getHitCountBad() {
 		return this.hitCountBad;
 	}
-	
-	public void setHitCountBad (Integer hitCountBad) {
+
+	public void setHitCountBad(Integer hitCountBad) {
 		this.hitCountBad = hitCountBad;
 	}
 
@@ -135,11 +135,11 @@ public class HitsEntity {
 		if (null == updateHits) {
 			return;
 		}
-		this.hitCategory = updateHits.getHitCategory();
-		this.clubType = updateHits.getClubType();
-		this.sessionDateTime = updateHits.getSessionDateTime();
-		this.hitCountGood = updateHits.getHitCountGood();
-		this.hitCountNeutral = updateHits.getHitCountNeutral();
-		this.hitCountBad = updateHits.getHitCountBad();
+		setHitCategory(updateHits.getHitCategory());
+		setClubType(updateHits.getClubType());
+		setSessionDateTime(updateHits.getSessionDateTime());
+		setHitCountGood(updateHits.getHitCountGood());
+		setHitCountNeutral(updateHits.getHitCountNeutral());
+		setHitCountBad(updateHits.getHitCountBad());
 	}
 }
